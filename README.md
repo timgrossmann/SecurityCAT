@@ -1,2 +1,1 @@
-# security_thesis
-Conent and PoC of my security testing automation thesis
+# Automated security and policy testing for cloud applications - Thesis & PoC
