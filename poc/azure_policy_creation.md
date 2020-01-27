@@ -80,6 +80,19 @@ GET https://management.azure.com/providers/Microsoft.Management/managementgroups
 Authorization: Bearer ...{JWT Format}
 ```
 
+## Summary for Policy Definition
+
+> https://docs.microsoft.com/en-us/rest/api/policy-insights/policystates/summarizeforpolicydefinition
+
+```bash
+POST https://management.azure.com/subscriptions/3a8b6402-45a2-4b9b-b6f7-73cbe8e507e2/providers/Microsoft.Authorization/policyDefinitions/{policyName}/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01
+Authorization: Bearer ...{JWT Format}
+Content-type: application/json
+```
+
+
+
+
 ## Trigger a policy of a Mgmt-Group
 
 ```bash
