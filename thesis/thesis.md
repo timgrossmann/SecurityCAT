@@ -68,14 +68,53 @@ OWASP Security RAT (Requirement Automation Tool) is a tool supposed to assist wi
 - create JIRA tickets for particular requirements in a batch mode in developer queues
 - import the main JIRA ticket into the tool anytime in order to see progress of the particular tickets
 
+... Example image of SecurityRAT
+
 
 #### OWASP
 What is OWASP what is part of it?
+
+The Open Web Application Security Project, or OWASP, is an international non-profit organization dedicated to web application security. One of OWASP’s core principles is that all of their materials be freely available and easily accessible on their website, making it possible for anyone to improve their own web application security. The materials they offer include documentation, tools, videos, and forums. 
+
+The OWASP Foundation, a 501(c)(3) non-profit organization (in the USA) established in 2004, supports the OWASP infrastructure and projects. Since 2011, OWASP is also registered as a non-profit organization in Belgium under the name of OWASP Europe VZW.
 
 #### EISA 
 What is EISE what is part of it?
 What is the Bosch way of defining it?
 http://www.intranet.bosch.com/doku/eisa/
+
+ Bosch EISA defines the Bosch basic protection level and the building blocks of IT security by defining
+
+    What IT security controls shall be put in place in order to be resilient against IT security threats,
+
+    How these security controls are positioned,
+
+    How they relate to each other and to the overall Enterprise IT architecture.
+
+Bosch EISA aims to enable IT organizations, projects and associates across the entire Bosch Group (RBW) to
+
+    gain a common understanding of IT Security,
+
+    ensure the consistent implementation of a common security baseline,
+
+    enhance compliance with Bosch-internal guidelines and regulations (primarily C/ISP CD 02900), and
+
+    align Bosch IT security with industry and government standards, for example:
+
+        ISO 27001 (full text in Bosch NormMaster),
+
+        Cloud Security Alliance (CSA) Cloud Control Matrix (CCM)
+
+        NIST Special Publication 800-53
+
+According to RB/GF 00177 C/IDS has the Governance Function for IT Security at Bosch.
+
+    “IT Security (Cyber Security) are technologies, processes and measures that protect IT systems and electronic information against internal and external cyber attacks (e.g. cyber espionage, extortion, sabotage).” (RB/GF 00177-002 - 2.19)
+
+    “Best in Class IT Security is a key factor for both internal and external digital products and services, which has to be ensured over the complete life cycle.” (RB/GF 00177-4.1) 
+
+C/IDS defines the Bosch IT Security Framework on a strategic level by providing IT Security guard rails for Bosch to protect Bosch Business Models, Products, Services and Data.
+
 
 ### Proof of Concept implementation
 
