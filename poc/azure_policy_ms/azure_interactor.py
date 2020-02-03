@@ -1,4 +1,6 @@
 import logging
+import re
+from time import sleep
 
 import requests
 from adal import AuthenticationContext
@@ -7,7 +9,7 @@ from adal import AuthenticationContext
 logging.basicConfig(
     filename="output.log",
     filemode="a",
-    format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO
+    format="%(asctime)s - %(levelname)s: %(message)s", level=logging.DEBUG
 )
 
 logging.getLogger().addHandler(logging.StreamHandler())
@@ -211,12 +213,41 @@ class AzureInteractor:
         trigger_endpoint = self.__get_policy_trigger_endpoint()
         result = self.session.post(trigger_endpoint, json=data)
 
-        # TODO replace api_version of headers with '2018-07-01-preview'
-        # since it's the only supported version for checking the state
-
+        # replace the api-version given by the request with the only one currently supported , '2018-07-01-preview'
+        result.headers["location"] = re.sub(r'(api-version=)(.*)', r"\g<1>2018-07-01-preview", result.headers["location"], flags=re.IGNORECASE)
         logging.debug(f"Status URI of trigger request: {result.headers['location']}")
 
         return result
 
     def get_policy_eval_state(self, eval_url):
-        pass
+        """Requests the policy evaluation state of the given url
+        (Status Code 202 - Pending, 200 - Completed)
+        
+        Parameters:
+        eval_url (String): url returned by the trigger policy evaluation  call
+        
+        Returns:
+        requests Response object: instance of Response of the policy evaluation
+        """
+
+        return self.__get_url(eval_url)
+
+    def wait_for_eval_complete(self, eval_url, interval = 10):
+        """Waits for the policy evaluation given at the url to be completed
+        (Status Code 202 - Pending, 200 - Completed)
+        
+        Parameters:
+        eval_url (String): url returned by the trigger policy evaluation  call
+        
+        Returns:
+        requests Response object: instance of Response of completed policy evalutation
+        """
+        
+        result = self.get_policy_eval_state(eval_url)
+
+        while result.status_code == 202:
+            logging.debug(f'Evaluation still ongoing, waiting {interval} seconds before next check')
+            sleep(interval)
+            result = self.get_policy_eval_state(eval_url)
+
+        return result
