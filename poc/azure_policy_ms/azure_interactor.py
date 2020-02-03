@@ -1,0 +1,207 @@
+import logging
+
+import requests
+from adal import AuthenticationContext
+
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO
+)
+
+
+class AzureInteractor:
+    def __init__(
+        self,
+        tenant_id,
+        subscription_id,
+        client_id,
+        client_secret,
+        resource="https://management.azure.com/",
+        api_version="2019-09-01",
+    ):
+        """Wrapper for the azure interactions
+        
+        Parameters:
+        tenant_id (String): tenant-id from Azure AD
+        subscription_id (String): subscription_id of azure subscription
+        client_id (String): client id from application
+        client_secret (String): client secret from application
+        resource (String): optional url endpoint of azure resource ([default] 'https://management.azure.com/')
+        api_version (String): : optional api version of azure services ([default] '2019-09-01')
+
+        Returns:
+        AzureInteractor: instance of this class
+        """
+
+        self.auth_context = AuthenticationContext(
+            f"https://login.microsoftonline.com/{tenant_id}/"
+        )
+        self.session = SESSION = requests.Session()
+        logging.debug("Requests session created")
+
+        self.subscription_id = subscription_id
+        self.api_version = api_version
+        self.credentials = {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "resource": resource,
+        }
+        self.update_auth_token(self.credentials)
+
+    def update_auth_token(self, credentials):
+        """Updates the Authorization header of the requests session with the access token for given credentials
+        
+        Parameters:
+        credentials (dict): dictionary containing the client_id, client_secret, and 'resource'
+        """
+
+        token_response = self.auth_context.acquire_token_with_client_credentials(
+            client_id=credentials["client_id"],
+            client_secret=credentials["client_secret"],
+            resource=credentials["resource"],
+        )
+
+        # add bearer token to the requests session
+        self.session.headers.update(
+            {"Authorization": "Bearer " + token_response["accessToken"]}
+        )
+
+        logging.info("Access Token retrieved and set in the current session")
+
+    def get_policy_def_endpoint(self, policy_id):
+        """Creates the URI for policy definitions with the given policy_id
+        
+        Parameters:
+        policy_id (String): unique identifier for policy definition
+        
+        Returns:
+        String: URI of the definition endpoint filled with the given policy_id
+        """
+
+        return f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.Authorization/policyDefinitions/{policy_id}?api-version={self.api_version}"
+
+    def get_policy_assign_endpoint(self, assignment_id):
+        """Creates the URI for policy definitions with the given assignment_id
+        
+        Parameters:
+        assignment_id (String): unique identifier for policy assignment
+        
+        Returns:
+        String: URI of the assignment endpoint filled with the given assignment_id
+        """
+
+        return f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.Authorization/policyAssignments/{assignment_id}?api-version={self.api_version}"
+
+    def get_policy_trigger_endpoint(self):
+        """Creates the URI for policy triggering
+        
+        Returns:
+        String: URI of the trigger endpoint
+        """
+
+        return f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version={self.api_version}"
+
+    def get_url(self, url):
+        """Get calls the given url
+        Trigger evaluation state for execution (202 if going, 200 if succeeded)
+        
+        Parameters:
+        url (String): url to do the get call to
+        
+        Returns:
+        requests Response object: instance of Response of the get operation
+        """
+
+        result = self.session.get(url)
+        return result
+
+    def get_policy_definition(self, policy_id):
+        """Updates the Authorization header of the requests session with the access token for given credentials
+        
+        Parameters:
+        credentials (dict): dictionary containing the client_id, client_secret, and 'resource'
+        
+        Returns:
+        requests Response object: instance of Response of the get operation
+        """
+
+        policy_get_endpoint = self.get_policy_def_endpoint(policy_id)
+        result = self.session.get(policy_get_endpoint)
+
+        return result
+
+    def put_policy_definition(self, policy_id, definition_json):
+        """Creates a azure policy definition with the given policy_id and the given json data
+        
+        Parameters:
+        policy_id (String): unique identifier for policy definition
+        definition_json (dict): dictionary of the policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure
+        
+        Returns:
+        requests Response object: instance of Response of the put operation
+        """
+
+        policy_def_endpoint = self.get_policy_def_endpoint(policy_id)
+        result = self.session.put(policy_def_endpoint, json=definition_json)
+
+        return result
+
+    def put_policy_assignment(self, assignment_id, policy_id):
+        """Creates a azure policy assignment with the given assignment_id and policy_id
+        
+        Parameters:
+        assignment_id (String): unique identifier for policy assignment
+        policy_id (String): unique identifier for policy definition
+        
+        Returns:
+        requests Response object: instance of Response of the put operation
+        """
+
+        policy_def = self.get_policy_definition(policy_id)
+
+        try:
+            policy_def_json = policy_def.json()
+
+            data = {
+                "properties": {
+                    "displayName": policy_def_json["properties"]["displayName"],
+                    "description": policy_def_json["properties"]["description"],
+                    "metadata": {"assignedBy": "Azure Interactor Script"},
+                    "policyDefinitionId": policy_def_json["properties"]["id"],
+                    "enforcementMode": "Default",
+                    "parameters": {},
+                }
+            }
+
+            policy_assign_endpoint = self.get_policy_assign_endpoint(assignment_id)
+            result = self.session.put(policy_assign_endpoint, json=data)
+
+            return result
+
+        except Exception as err:
+            logging.error(f"Could not get policy with id {policy_id} - {err}")
+            raise err
+
+    def trigger_policy(self, assignment_id=None):
+        """Triggers the evaluation of the policies in scope. If assignment_id given, only triggers the policies of the assignment
+        https://docs.microsoft.com/en-us/azure/governance/policy/how-to/get-compliance-data#on-demand-evaluation-scan
+        
+        Parameters:
+        assignment_id (String): unique identifier for policy assignment
+        
+        Returns:
+        requests Response object: instance of Response of the put operation (trigger evaluation, get back url to check evaluation state)
+        """
+
+        data = {}
+
+        if assignment_id:
+            data = {
+                "$filter": "policyAssignmentId eq '/subscriptions/{self.subscription_id}/providers/Microsoft.Authorization/policyAssignments/{assignment_id}/'"
+            }
+
+        trigger_endpoint = self.get_policy_trigger_endpoint()
+        result = self.session.post(trigger_endpoint, json=data)
+
+        logging.debug(f"Status URI of trigger request: {result.headers['location']}")
+
+        return result
