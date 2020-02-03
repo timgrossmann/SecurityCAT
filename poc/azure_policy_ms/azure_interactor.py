@@ -3,9 +3,14 @@ import logging
 import requests
 from adal import AuthenticationContext
 
+# setup logging to console and log file
 logging.basicConfig(
+    filename="output.log",
+    filemode="a",
     format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO
 )
+
+logging.getLogger().addHandler(logging.StreamHandler())
 
 
 class AzureInteractor:
@@ -35,7 +40,7 @@ class AzureInteractor:
         self.auth_context = AuthenticationContext(
             f"https://login.microsoftonline.com/{tenant_id}/"
         )
-        self.session = SESSION = requests.Session()
+        self.session = requests.Session()
         logging.debug("Requests session created")
 
         self.subscription_id = subscription_id
@@ -45,9 +50,9 @@ class AzureInteractor:
             "client_secret": client_secret,
             "resource": resource,
         }
-        self.update_auth_token(self.credentials)
+        self.__update_auth_token(self.credentials)
 
-    def update_auth_token(self, credentials):
+    def __update_auth_token(self, credentials):
         """Updates the Authorization header of the requests session with the access token for given credentials
         
         Parameters:
@@ -67,7 +72,7 @@ class AzureInteractor:
 
         logging.info("Access Token retrieved and set in the current session")
 
-    def get_policy_def_endpoint(self, policy_id):
+    def __get_policy_def_endpoint(self, policy_id):
         """Creates the URI for policy definitions with the given policy_id
         
         Parameters:
@@ -79,7 +84,7 @@ class AzureInteractor:
 
         return f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.Authorization/policyDefinitions/{policy_id}?api-version={self.api_version}"
 
-    def get_policy_assign_endpoint(self, assignment_id):
+    def __get_policy_assign_endpoint(self, assignment_id):
         """Creates the URI for policy definitions with the given assignment_id
         
         Parameters:
@@ -91,16 +96,16 @@ class AzureInteractor:
 
         return f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.Authorization/policyAssignments/{assignment_id}?api-version={self.api_version}"
 
-    def get_policy_trigger_endpoint(self):
+    def __get_policy_trigger_endpoint(self):
         """Creates the URI for policy triggering
         
         Returns:
         String: URI of the trigger endpoint
         """
 
-        return f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version={self.api_version}"
+        return f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version=2019-10-01"
 
-    def get_url(self, url):
+    def __get_url(self, url):
         """Get calls the given url
         Trigger evaluation state for execution (202 if going, 200 if succeeded)
         
@@ -124,7 +129,7 @@ class AzureInteractor:
         requests Response object: instance of Response of the get operation
         """
 
-        policy_get_endpoint = self.get_policy_def_endpoint(policy_id)
+        policy_get_endpoint = self.__get_policy_def_endpoint(policy_id)
         result = self.session.get(policy_get_endpoint)
 
         return result
@@ -140,8 +145,10 @@ class AzureInteractor:
         requests Response object: instance of Response of the put operation
         """
 
-        policy_def_endpoint = self.get_policy_def_endpoint(policy_id)
+        policy_def_endpoint = self.__get_policy_def_endpoint(policy_id)
         result = self.session.put(policy_def_endpoint, json=definition_json)
+
+        logging.info(f"Creating Policy definition with id {policy_id} in subscription {self.subscription_id}")
 
         return result
 
@@ -166,14 +173,16 @@ class AzureInteractor:
                     "displayName": policy_def_json["properties"]["displayName"],
                     "description": policy_def_json["properties"]["description"],
                     "metadata": {"assignedBy": "Azure Interactor Script"},
-                    "policyDefinitionId": policy_def_json["properties"]["id"],
+                    "policyDefinitionId": policy_def_json["id"],
                     "enforcementMode": "Default",
                     "parameters": {},
                 }
             }
 
-            policy_assign_endpoint = self.get_policy_assign_endpoint(assignment_id)
+            policy_assign_endpoint = self.__get_policy_assign_endpoint(assignment_id)
             result = self.session.put(policy_assign_endpoint, json=data)
+
+            logging.info(f"Creating Policy assignment with id {policy_id} ({policy_def_json['properties']['displayName']}) in subscription {self.subscription_id}")
 
             return result
 
@@ -199,9 +208,15 @@ class AzureInteractor:
                 "$filter": "policyAssignmentId eq '/subscriptions/{self.subscription_id}/providers/Microsoft.Authorization/policyAssignments/{assignment_id}/'"
             }
 
-        trigger_endpoint = self.get_policy_trigger_endpoint()
+        trigger_endpoint = self.__get_policy_trigger_endpoint()
         result = self.session.post(trigger_endpoint, json=data)
+
+        # TODO replace api_version of headers with '2018-07-01-preview'
+        # since it's the only supported version for checking the state
 
         logging.debug(f"Status URI of trigger request: {result.headers['location']}")
 
         return result
+
+    def get_policy_eval_state(self, eval_url):
+        pass

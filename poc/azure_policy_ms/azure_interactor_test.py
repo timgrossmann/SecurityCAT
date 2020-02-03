@@ -41,4 +41,10 @@ definition_json = {
   }
 }
 
-interactor.put_policy_definition(policy_id, definition_json)
+print(interactor.put_policy_definition(policy_id, definition_json).text)
+print()
+print(interactor.put_policy_assignment(policy_id, policy_id))
+print()
+check_loc = interactor.trigger_policy().headers["location"][:-10] + "2018-07-01-preview"
+print(check_loc)
+print(interactor.get_policy_eval_state(check_loc))
