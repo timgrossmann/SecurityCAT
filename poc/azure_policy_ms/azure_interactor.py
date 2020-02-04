@@ -5,14 +5,15 @@ from time import sleep
 import requests
 from adal import AuthenticationContext
 
+
 # setup logging to console and log file
 logging.basicConfig(
-    filename="output.log",
-    filemode="a",
-    format="%(asctime)s - %(levelname)s: %(message)s", level=logging.DEBUG
+    format="%(asctime)-8s - %(levelname)-8s: %(message)-8s",
+    level=logging.DEBUG,
+    handlers=[logging.StreamHandler(), logging.FileHandler("debug.log")],
 )
 
-logging.getLogger().addHandler(logging.StreamHandler())
+logger = logging.getLogger(__file__)
 
 
 class AzureInteractor:
@@ -28,7 +29,7 @@ class AzureInteractor:
         """Wrapper for the azure interactions
         
         Parameters:
-        tenant_id (String): tenant-id from Azure AD
+        tenant_id (String): tenant_id from Azure AD
         subscription_id (String): subscription_id of azure subscription
         client_id (String): client id from application
         client_secret (String): client secret from application
@@ -150,7 +151,9 @@ class AzureInteractor:
         policy_def_endpoint = self.__get_policy_def_endpoint(policy_id)
         result = self.session.put(policy_def_endpoint, json=definition_json)
 
-        logging.info(f"Creating Policy definition with id {policy_id} in subscription {self.subscription_id}")
+        logging.info(
+            f"Creating Policy definition with id {policy_id} in subscription {self.subscription_id}"
+        )
 
         return result
 
@@ -184,7 +187,9 @@ class AzureInteractor:
             policy_assign_endpoint = self.__get_policy_assign_endpoint(assignment_id)
             result = self.session.put(policy_assign_endpoint, json=data)
 
-            logging.info(f"Creating Policy assignment with id {policy_id} ({policy_def_json['properties']['displayName']}) in subscription {self.subscription_id}")
+            logging.info(
+                f"Creating Policy assignment with id {policy_id} ({policy_def_json['properties']['displayName']}) in subscription {self.subscription_id}"
+            )
 
             return result
 
@@ -214,7 +219,12 @@ class AzureInteractor:
         result = self.session.post(trigger_endpoint, json=data)
 
         # replace the api-version given by the request with the only one currently supported , '2018-07-01-preview'
-        result.headers["location"] = re.sub(r'(api-version=)(.*)', r"\g<1>2018-07-01-preview", result.headers["location"], flags=re.IGNORECASE)
+        result.headers["location"] = re.sub(
+            r"(api-version=)(.*)",
+            r"\g<1>2018-07-01-preview",
+            result.headers["location"],
+            flags=re.IGNORECASE,
+        )
         logging.debug(f"Status URI of trigger request: {result.headers['location']}")
 
         return result
@@ -232,7 +242,7 @@ class AzureInteractor:
 
         return self.__get_url(eval_url)
 
-    def wait_for_eval_complete(self, eval_url, interval = 10):
+    def wait_for_eval_complete(self, eval_url, interval=10):
         """Waits for the policy evaluation given at the url to be completed
         (Status Code 202 - Pending, 200 - Completed)
         
@@ -242,11 +252,13 @@ class AzureInteractor:
         Returns:
         requests Response object: instance of Response of completed policy evalutation
         """
-        
+
         result = self.get_policy_eval_state(eval_url)
 
         while result.status_code == 202:
-            logging.debug(f'Evaluation still ongoing, waiting {interval} seconds before next check')
+            logging.debug(
+                f"Evaluation still ongoing, waiting {interval} seconds before next check"
+            )
             sleep(interval)
             result = self.get_policy_eval_state(eval_url)
 

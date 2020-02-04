@@ -1,90 +1,251 @@
 #!/usr/bin/env python3
-import time
+import logging
+import json
+import multiprocessing
+import uuid
+
 import requests
 from flask import Flask, request, jsonify
 from flask_restplus import Resource, Api, fields, reqparse
-app = Flask(__name__)
 
+from azure_interactor import AzureInteractor
+
+
+# setup logging to console and log file
+logging.basicConfig(
+    format="%(asctime)-8s - %(levelname)-8s: %(message)-8s",
+    level=logging.DEBUG,
+    handlers=[logging.StreamHandler(), logging.FileHandler("debug.log")],
+)
+
+app = Flask(__name__)
 api = Api(app)
 
+# dict holding the currently running evaluations
+running_evaluations = {}
 
-# Parameters given for a start of a scan
-scan_definition = api.model('ScanDefinition', {
-    'testProperties' : fields.Nested(api.model('TestProperties', {
-        'sonarKey': fields.String(
-            description=u'SonarQube Key (if available)',
+# Parameters given for a start of a policy evaluation
+policy_eval_definition = api.model(
+    "PolicyEvalDefinition",
+    {
+        "tenantId": fields.String(
+            description="Tenant-id from Azure AD", required=True,
+        ),
+        "subscriptionId": fields.String(
+            description="Subscription_id of azure subscription", required=True,
+        ),
+        "clientId": fields.String(
+            description="Client id from application for service principal",
+            required=True,
+        ),
+        "clientSecret": fields.String(
+            description="Client secret from application for service principal",
+            required=True,
+        ),
+        "resource": fields.String(
+            description="Optional url endpoint of azure resource ([default] 'https://management.azure.com/')",
             required=False,
         ),
-        'scmUrl': fields.String(
-            description=u'Git repository URL (if available)',
+        "policyId": fields.String(
+            description="Unique identifier for policy definition", required=True,
+        ),
+        "policyJson": fields.String(
+            description="Stringified json of the policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure",
+            required=True,
+        ),
+        "assignmentId": fields.String(
+            description="Optional unique identifier for policy assignment (policyId will be used if not given)",
             required=False,
         ),
-        'appUrl': fields.String(
-            description=u'Application URL (if available)',
-            required=False,
+    },
+)
+
+# Policy evaluation result structure expected by SecurityRAT
+policy_eval_result = api.model(
+    "PolicyEvalResultStructure",
+    {
+        "id": fields.String(description="Unique id of the "),
+        "result": fields.Nested(
+            api.model(
+                "PolicyEvalResult",
+                {
+                    "status": fields.String(
+                        description="Requirement fulfilled? (PASSED/FAILED/ERROR/IN_PROGRESS)"
+                    ),
+                    "confidenceLevel": fields.Integer(description="Value in percent"),
+                    "message": fields.String(description="Result message"),
+                },
+            )
         ),
-    })),
-    'requirements': fields.List(
-        fields.String,
-        required=True,
-        description=u'List of requirements short names to test',
-    ),
-})
-
-# Scan result structure
-scan_result = api.model('ScanResultStructure', {
-    'req': fields.String(description=u'Requirement ShortName'),
-    'result' : fields.Nested(api.model('ScanResult', {
-        'status': fields.String(description=u'Requirement fulfilled? (PASSED/FAILED/ERROR/IN_PROGRESS)'),
-        'confidenceLevel': fields.Integer(description=u'Value in percent'),
-        'message': fields.String(description=u'Result message')
-    })),
-})
+    },
+)
 
 
-### Scanning class
-@api.route('/scanapi/tests', methods=['POST'])
-class Scan(Resource):
-    @api.doc(responses={200: 'Test result'})
-    @api.expect(scan_definition)
-    @api.marshal_list_with(scan_result)
+def get_error_res(eval_id):
+    """Creates a default error response based on the policy_evaluation_result structure
+    
+    Parameters:
+    eval_id (String): Unique identifier for evaluation policy
+    
+    Returns:
+    PolicyEvalResultStructure object: with the error state with the given id
+    """
+    return {
+        "id": eval_id,
+        "result": {
+            "message": f"No evaluation with the id {eval_id} ongoing",
+            "status": "ERROR",
+            "confidenceLevel": "0",
+        },
+    }
+
+
+def process_policy_evaluation(
+    eval_id,
+    tenant_id,
+    subscription_id,
+    client_id,
+    client_secret,
+    resource,
+    policy_id,
+    policy_json,
+    assignment_id,
+):
+    """Creates a default error response based on the policy_evaluation_result structure
+    
+    Parameters:
+    eval_id (String): Unique identifier for evaluation policy
+    """
+
+    try:
+        app.logger.info(f"Authenticating service principal with {client_id}")
+        interactor = AzureInteractor(tenant_id, subscription_id, client_id, client_secret)
+
+    except Exception as err:
+        app.logger.info(f"Could not authenticate to Azure with given credentials for client {client_id}")
+        
+        output_res["result"]["status"] = "ERROR"
+        output_res["result"][
+            "message"
+        ] = f"Could not authenticate to Azure with given credentials for client {client_id}"
+
+        running_evaluations[eval_id] = output_res
+        return
+    
+    
+    app.logger.info(f"Creating policy definition {policy_id}")
+    policy_definition_res = interactor.put_policy_definition(policy_id, policy_json)
+
+    # definition was not created, report and abort
+    if policy_definition_res.status_code != 201:
+        output_res["result"]["status"] = "ERROR"
+        output_res["result"][
+            "message"
+        ] = f"Policy definition {policy_id} could not be created - {policy_definition_res.status_code}: {policy_definition_res.text}"
+
+        running_evaluations[eval_id] = output_res
+        return output_res
+
+    app.logger.info(
+        f"Creating policy assignment of definition {policy_id} to assignment {assignment_id}"
+    )
+    policy_assignment_res = interactor.put_policy_assignment(policy_id, assignment_id)
+
+    if policy_assignment_res.status_code != 201:
+        output_res["result"]["status"] = "ERROR"
+        output_res["result"][
+            "message"
+        ] = f"Policy assignment {assignment_id} could not be created - {policy_assignment_res.status_code}: {policy_assignment_res.text}"
+
+        running_evaluations[eval_id] = output_res
+        return output_res
+
+    app.logger.info(f"Triggering created policy assignment {assignment_id}")
+    eval_status_loc = interactor.trigger_policy().headers["location"]
+    app.logger.debug(f"Policy evaluation for {assignment_id} at {eval_status_loc}")
+
+    app.logger.debug(
+        f"Starting poll cycle for {assignment_id}. Polling {eval_status_loc}"
+    )
+    interactor.wait_for_eval_complete(check_loc)
+
+    # TODO get summary for evaluation here
+
+
+### Policy evaluation status check
+@api.route("/api/tests/<test_id>", methods=["GET"])
+class PolicyResult(Resource):
+    @api.doc(responses={200: "Test result"})
+    @api.marshal_list_with(policy_eval_result)
+    def get(self, test_id):
+        eval_state = running_evaluations.get(test_id)
+
+        if not eval_state:
+            return get_error_res(test_id)
+
+        return eval_state
+
+
+### Policy evaluation class
+@api.route("/api/tests", methods=["POST"])
+class PolicyEvaluation(Resource):
+    @api.doc(responses={200: "Test result"})
+    @api.expect(policy_eval_definition)
+    @api.marshal_list_with(policy_eval_result)
     def post(self):
         request_params = api.payload
-        target_url = request_params['testProperties']['appUrl']
-        requirements = request_params['requirements']
-        results = []   # array with test results
-        request_headers = {
-            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0'
-        }
-        response = requests.get(target_url, request_headers) # fetch the http response
-        for req in requirements:
-            output_res = {"req":req, 'result': {"message":"None", "status": "FAILED", "confidenceLevel": "0"}}
-            if req == 'ASVS_3.0.1_10.10':
-                if 'Public-Key-Pins' in response.headers:
-                    output_res['result']['status'] = "PASSED"
-                    output_res['result']['message'] = 'Detected HPKP Header with the value: \n```\n' + response.headers['Public-Key-Pins'] + '\n```'
-                else:
-                    output_res['result']['message'] = 'No pinning :('
-                output_res['result']['confidenceLevel'] = 90
-            elif req == 'ASVS_3.0.1_10.11':
-                if 'Strict-Transport-Security' in response.headers:
-                    output_res['result']['status'] = "PASSED"
-                    output_res['result']['message'] = 'Detected HSTS Header with the value: \n```\n' +  response.headers['Strict-Transport-Security'] + '\n```'
-                else:
-                    output_res['result']['message'] = 'No HSTS :('
-                output_res['result']['confidenceLevel'] = 90
-            elif req == 'ASVS_3.0.1_10.12':
-                if 'Strict-Transport-Security' in response.headers and 'preload' in response.headers['Strict-Transport-Security']:
-                    output_res['result']['status'] = "PASSED"
-                    output_res['result']['message'] = 'Preloading active: : \n```\n' +  response.headers['Strict-Transport-Security'] + '\n```'
-                else:
-                    output_res['result']['message'] = 'No preloading :('
-                output_res['result']['confidenceLevel'] = 90
-            else:
-                output_res['result']['message'] = 'Unknown requirement'
-                output_res['result']['status'] = 'ERROR'
-            results.append(output_res)
-        return results
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+        eval_id = str(uuid.uuid4())
+        tenant_id = request_params["tenantId"]
+        subscription_id = request_params["subscriptionId"]
+        client_id = request_params["clientId"]
+        client_secret = request_params["clientSecret"]
+        resource = request_params.get("resource")
+        policy_id = request_params["policyId"]
+        assignment_id = request_params.get("assignmentId", policy_id)
+        policy_json = request_params["policyJson"]
+
+        output_res = {
+            "id": eval_id,
+            "result": {"message": "None", "status": "FAILED", "confidenceLevel": "0",},
+        }
+
+        # if policy definition is string then try parse
+        # if not valid, abort
+        try:
+            if isinstance(policy_json, str):
+                app.logger.debug("String")
+                policy_json = json.loads(policy_json)
+        except ValueError:
+            app.logger.error(f"Error decoding given policy json - {policy_json}")
+            output_res["result"][
+                "message"
+            ] = f"Error decoding given policy json - {policy_json}"
+            output_res["result"]["status"] = "ERROR"
+
+            return output_res
+
+        output_res["result"]["status"] = "IN_PROGRESS"
+        running_evaluations[eval_id] = output_res
+
+        thread = multiprocessing.Process(
+            target=process_policy_evaluation,
+            args=(
+                eval_id,
+                tenant_id,
+                subscription_id,
+                client_id,
+                client_secret,
+                resource,
+                policy_id,
+                policy_json,
+                assignment_id,
+            ),
+        )
+        thread.start()
+
+        return output_res
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)  # threaded=True by default
