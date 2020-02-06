@@ -1,4 +1,5 @@
 import logging
+import json
 from threading import Thread, get_ident
 from time import sleep
 
@@ -112,10 +113,9 @@ class EvaluationWorker(Thread):
         # Get final summary and update the running_evaluations entry for this eval_id
         try:
             evaluation_result = self.__get_evaluation_summary()
-            self.logger.info(evaluation_result.text)
 
-            self.output_res["result"]["status"] = "SUCCESS"
-            self.output_res["result"]["message"] = f"Blabla"
+            self.output_res["result"]["status"] = "FAILED" if evaluation_result['nonCompliantResources'] > 0 else "SUCCESS"
+            self.output_res["result"]["message"] = json.dumps(evaluation_result, indent=4)
 
             self.running_evaluations[self.eval_id] = self.output_res
             return
@@ -199,7 +199,7 @@ class EvaluationWorker(Thread):
         String: State url of the triggered policy evaluation
         """
 
-        self.logger.info(f"Triggering created policy assignment {self.assignment_id}")
+        self.logger.info(f"Triggering policy assignment {self.assignment_id}")
         eval_status_loc = self.interactor.trigger_policy().headers["location"]
         self.logger.debug(
             f"Policy evaluation for {self.assignment_id} at {eval_status_loc}"
@@ -251,4 +251,4 @@ class EvaluationWorker(Thread):
                 f"Summary could not be retrived: {result.status_code} - {result.text}"
             )
 
-        return result
+        return result.json()["value"][0]["results"]

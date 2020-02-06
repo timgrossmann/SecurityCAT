@@ -47,7 +47,7 @@ print(check_loc)
 print(interactor.wait_for_eval_complete(check_loc))
 """
 
-print(interactor.get_policy_eval_summary("6dd881dee049489888d7e22e").text)
+print(interactor.get_policy_eval_summary("6dd881dee049489888d7e22e").json()["value"][0]["results"])
 
 
 """

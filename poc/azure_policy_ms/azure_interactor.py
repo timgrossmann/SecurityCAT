@@ -237,7 +237,7 @@ class AzureInteractor:
 
         if assignment_id:
             data = {
-                "$filter": "policyAssignmentId eq '/subscriptions/{self.subscription_id}/providers/Microsoft.Authorization/policyAssignments/{assignment_id}/'"
+                "$filter": "PolicyAssignmentId eq '/subscriptions/{self.subscription_id}/providers/Microsoft.Authorization/policyAssignments/{assignment_id}/'"
             }
 
         trigger_endpoint = self.__get_policy_trigger_endpoint()
