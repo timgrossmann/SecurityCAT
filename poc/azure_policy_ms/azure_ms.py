@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 import logging
 import json
-import multiprocessing
 import uuid
 
 import requests
 from flask import Flask, request, jsonify
 from flask_restplus import Resource, Api, fields, reqparse
 
-from azure_interactor import AzureInteractor
+from azure_ms_thread import EvaluationWorker
 
 
 # setup logging to console and log file
@@ -100,78 +99,6 @@ def get_error_res(eval_id):
     }
 
 
-def process_policy_evaluation(
-    eval_id,
-    tenant_id,
-    subscription_id,
-    client_id,
-    client_secret,
-    resource,
-    policy_id,
-    policy_json,
-    assignment_id,
-):
-    """Creates a default error response based on the policy_evaluation_result structure
-    
-    Parameters:
-    eval_id (String): Unique identifier for evaluation policy
-    """
-
-    try:
-        app.logger.info(f"Authenticating service principal with {client_id}")
-        interactor = AzureInteractor(tenant_id, subscription_id, client_id, client_secret)
-
-    except Exception as err:
-        app.logger.info(f"Could not authenticate to Azure with given credentials for client {client_id}")
-        
-        output_res["result"]["status"] = "ERROR"
-        output_res["result"][
-            "message"
-        ] = f"Could not authenticate to Azure with given credentials for client {client_id}"
-
-        running_evaluations[eval_id] = output_res
-        return
-    
-    
-    app.logger.info(f"Creating policy definition {policy_id}")
-    policy_definition_res = interactor.put_policy_definition(policy_id, policy_json)
-
-    # definition was not created, report and abort
-    if policy_definition_res.status_code != 201:
-        output_res["result"]["status"] = "ERROR"
-        output_res["result"][
-            "message"
-        ] = f"Policy definition {policy_id} could not be created - {policy_definition_res.status_code}: {policy_definition_res.text}"
-
-        running_evaluations[eval_id] = output_res
-        return output_res
-
-    app.logger.info(
-        f"Creating policy assignment of definition {policy_id} to assignment {assignment_id}"
-    )
-    policy_assignment_res = interactor.put_policy_assignment(policy_id, assignment_id)
-
-    if policy_assignment_res.status_code != 201:
-        output_res["result"]["status"] = "ERROR"
-        output_res["result"][
-            "message"
-        ] = f"Policy assignment {assignment_id} could not be created - {policy_assignment_res.status_code}: {policy_assignment_res.text}"
-
-        running_evaluations[eval_id] = output_res
-        return output_res
-
-    app.logger.info(f"Triggering created policy assignment {assignment_id}")
-    eval_status_loc = interactor.trigger_policy().headers["location"]
-    app.logger.debug(f"Policy evaluation for {assignment_id} at {eval_status_loc}")
-
-    app.logger.debug(
-        f"Starting poll cycle for {assignment_id}. Polling {eval_status_loc}"
-    )
-    interactor.wait_for_eval_complete(check_loc)
-
-    # TODO get summary for evaluation here
-
-
 ### Policy evaluation status check
 @api.route("/api/tests/<test_id>", methods=["GET"])
 class PolicyResult(Resource):
@@ -228,9 +155,9 @@ class PolicyEvaluation(Resource):
         output_res["result"]["status"] = "IN_PROGRESS"
         running_evaluations[eval_id] = output_res
 
-        thread = multiprocessing.Process(
-            target=process_policy_evaluation,
-            args=(
+        try:
+            worker = EvaluationWorker(
+                running_evaluations,
                 eval_id,
                 tenant_id,
                 subscription_id,
@@ -240,9 +167,21 @@ class PolicyEvaluation(Resource):
                 policy_id,
                 policy_json,
                 assignment_id,
-            ),
-        )
-        thread.start()
+            )
+            # Setting daemon to True will let the main thread exit even though the workers are blocking
+            worker.daemon = True
+            worker.start()
+        except Exception as err:
+            app.logger.info(
+                f"Could not authenticate to Azure with given credentials for client {client_id}... {err}"
+            )
+
+            output_res["result"]["status"] = "ERROR"
+            output_res["result"][
+                "message"
+            ] = f"Could not authenticate to Azure with given credentials for client {client_id}... {err}"
+
+            running_evaluations[eval_id] = output_res
 
         return output_res
 
