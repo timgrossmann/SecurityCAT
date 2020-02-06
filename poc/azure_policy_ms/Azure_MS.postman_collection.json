@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "62980f41-0bb6-4935-8a6a-0be432e584e0",
+		"_postman_id": "d8bdbdd2-1d56-43e6-84b5-f7f95eee75b2",
 		"name": "Azure_MS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -19,7 +19,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"tenantId\": {{TENANT_ID}},\n\t\"subscriptionId\": {{SUBSCRIPTION_ID}},\n\t\"clientId\": {{CLIENT_ID}},\n\t\"clientSecret\": {{CLIENT_SECRET}},\n\t\"policyId\": {{POLICY_ID}},\n\t\"policyJson\": {{JSON}}\n}"
+					"raw": "{\n\t\"tenantId\": {{TENANT_ID}},\n\t\"subscriptionId\": {{SUBSCRIPTION_ID}},\n\t\"clientId\": {{CLIENT_ID}},\n\t\"clientSecret\": {{CLIENT_SECRET}},\n\t\"policyId\": {{POLICY_ID}},\n\t\"policyJsonUrl\": {{JSON_URL}}\n}"
 				},
 				"url": {
 					"raw": "localhost:5000/api/tests",

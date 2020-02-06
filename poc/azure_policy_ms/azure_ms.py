@@ -8,6 +8,7 @@ from flask import Flask, request, jsonify
 from flask_restplus import Resource, Api, fields, reqparse
 
 from azure_ms_thread import EvaluationWorker
+from bitbucket_req import get_from_bitbucket
 
 
 # setup logging to console and log file
@@ -21,6 +22,7 @@ app = Flask(__name__)
 api = Api(app)
 
 # dict holding the currently running evaluations
+# TODO replace with db
 running_evaluations = {}
 
 # Parameters given for a start of a policy evaluation
@@ -48,8 +50,8 @@ policy_eval_definition = api.model(
         "policyId": fields.String(
             description="Unique identifier for policy definition", required=True,
         ),
-        "policyJson": fields.String(
-            description="Stringified json of the policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure",
+        "policyJsonUrl": fields.String(
+            description="URL of the json policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure",
             required=True,
         ),
         "assignmentId": fields.String(
@@ -130,7 +132,8 @@ class PolicyEvaluation(Resource):
         resource = request_params.get("resource")
         policy_id = request_params["policyId"]
         assignment_id = request_params.get("assignmentId", policy_id)
-        policy_json = request_params["policyJson"]
+        policy_json_url = request_params["policyJsonUrl"]
+        policy_json = {}
 
         output_res = {
             "id": eval_id,
@@ -140,14 +143,12 @@ class PolicyEvaluation(Resource):
         # if policy definition is string then try parse
         # if not valid, abort
         try:
-            if isinstance(policy_json, str):
-                app.logger.debug("String")
-                policy_json = json.loads(policy_json)
-        except ValueError:
-            app.logger.error(f"Error decoding given policy json - {policy_json}")
+            policy_json = get_from_bitbucket(policy_json_url)
+        except Exception as err:
+            app.logger.error(f"Error retrieving policy json - {err}")
             output_res["result"][
                 "message"
-            ] = f"Error decoding given policy json - {policy_json}"
+            ] = f"Error retrieving policy json - {err}"
             output_res["result"]["status"] = "ERROR"
 
             return output_res
