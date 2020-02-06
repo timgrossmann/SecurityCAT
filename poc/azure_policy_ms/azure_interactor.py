@@ -108,6 +108,18 @@ class AzureInteractor:
 
         return f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version=2019-10-01"
 
+    def __get_policy_summary_endpoint(self, assignment_id):
+        """Creates the URI for policy evaluation summary with the given assignment_id
+        
+        Parameters:
+        assignment_id (String): unique identifier for policy assignment
+        
+        Returns:
+        String: URI of the assignment endpoint filled with the given assignment_id
+        """
+
+        return f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.Authorization/policyAssignments/{assignment_id}/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01"
+
     def __get_url(self, url):
         """Get calls the given url
         Trigger evaluation state for execution (202 if going, 200 if succeeded)
@@ -120,6 +132,19 @@ class AzureInteractor:
         """
 
         result = self.session.get(url)
+        return result
+
+    def __post_url(self, url):
+        """Get calls the given url
+        
+        Parameters:
+        url (String): url to do the get call to
+        
+        Returns:
+        requests Response object: instance of Response of the post operation
+        """
+
+        result = self.session.post(url)
         return result
 
     def get_policy_definition(self, policy_id):
@@ -242,24 +267,15 @@ class AzureInteractor:
 
         return self.__get_url(eval_url)
 
-    def wait_for_eval_complete(self, eval_url, interval=10):
-        """Waits for the policy evaluation given at the url to be completed
-        (Status Code 202 - Pending, 200 - Completed)
+    def get_policy_eval_summary(self, assignment_id):
+        """Requests the policy evaluation state of the given url
         
         Parameters:
-        eval_url (String): url returned by the trigger policy evaluation  call
+        assignment_id (String): unique identifier for policy assignment
         
         Returns:
-        requests Response object: instance of Response of completed policy evalutation
+        requests Response object: instance of Response of the policy evaluation
         """
 
-        result = self.get_policy_eval_state(eval_url)
-
-        while result.status_code == 202:
-            logging.debug(
-                f"Evaluation still ongoing, waiting {interval} seconds before next check"
-            )
-            sleep(interval)
-            result = self.get_policy_eval_state(eval_url)
-
-        return result
+        evaluation_summary_url = self.__get_policy_summary_endpoint(assignment_id)
+        return self.__post_url(evaluation_summary_url)
