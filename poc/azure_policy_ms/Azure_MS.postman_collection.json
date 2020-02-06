@@ -1,0 +1,60 @@
+{
+	"info": {
+		"_postman_id": "62980f41-0bb6-4935-8a6a-0be432e584e0",
+		"name": "Azure_MS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Post_Policy",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"tenantId\": {{TENANT_ID}},\n\t\"subscriptionId\": {{SUBSCRIPTION_ID}},\n\t\"clientId\": {{CLIENT_ID}},\n\t\"clientSecret\": {{CLIENT_SECRET}},\n\t\"policyId\": {{POLICY_ID}},\n\t\"policyJson\": {{JSON}}\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/api/tests",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"tests"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get_Policy_Eval_State",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:5000/api/tests/1d83429d-3b5f-4104-a534-aabc01e40b07",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"tests",
+						"1d83429d-3b5f-4104-a534-aabc01e40b07"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
