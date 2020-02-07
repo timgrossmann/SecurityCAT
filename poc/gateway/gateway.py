@@ -9,37 +9,52 @@ from celery import Celery
 from celery.task.control import inspect, revoke
 
 
+# URL of your instance of SecurityRAT
+SECRAT_URL = 'https://fe0vmc1201.de.bosch.com/' 
+AZURE_MS_URL = 'http://localhost:5000'
+
 app = Flask(__name__)
-
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
-
-securityrat_url = 'https://fe0vmc1201.de.bosch.com/' # URL of your instance of SecurityRAT
-microservice_url = 'http://localhost:5000'
 api = Api(app)
 
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'], backend=app.config['CELERY_RESULT_BACKEND'])
-celery.conf.update(app.config)
+celery = Celery(app.name)
+celery.config_from_object("celeryconfig")
 
 ns = api.namespace('scanapi', description='Management of scans')
 
 # necessary CORS headers
-extra_headers = {'Access-Control-Allow-Origin': securityrat_url,'Access-Control-Allow-Methods': 'GET,POST,OPTIONS,DELETE',
+extra_headers = {'Access-Control-Allow-Origin': SECRAT_URL, 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS,DELETE',
                   'Access-Control-Allow-Headers': 'content-type, x-securitycat-csrf', 'Access-Control-Expose-Headers': 'Location', 'Vary': 'Origin'}
 
 # Parameters given for a start of a scan
 scan_definition = api.model('ScanDefinition', {
     'testProperties': fields.Nested(api.model('TestProperties', {
-        'sonarKey': fields.String(
-            description=u'SonarQube Key (if available)',
+        "tenantId": fields.String(
+            description="Tenant-id from Azure AD", required=True,
+        ),
+        "subscriptionId": fields.String(
+            description="Subscription_id of azure subscription", required=True,
+        ),
+        "clientId": fields.String(
+            description="Client id from application for service principal",
+            required=True,
+        ),
+        "clientSecret": fields.String(
+            description="Client secret from application for service principal",
+            required=True,
+        ),
+        "resource": fields.String(
+            description="Optional url endpoint of azure resource ([default] 'https://management.azure.com/')",
             required=False,
         ),
-        'scmUrl': fields.String(
-            description=u'Git repository URL (if available)',
-            required=False,
+        "policyId": fields.String(
+            description="Unique identifier for policy definition", required=True,
         ),
-        'appUrl': fields.String(
-            description=u'Application URL (if available)',
+        "policyJsonUrl": fields.String(
+            description="URL of the json policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure",
+            required=True,
+        ),
+        "assignmentId": fields.String(
+            description="Optional unique identifier for policy assignment (policyId will be used if not given)",
             required=False,
         ),
     })),
@@ -55,8 +70,14 @@ scan_definition = api.model('ScanDefinition', {
 @celery.task(bind=True)
 def pass_scan(self, scan_pars):
     print(scan_pars)
-    r = requests.post(microservice_url+'/scanapi/tests', json=scan_pars)
+    
+    # starting the evaluation, get back eval_id of test
+    r = requests.post(AZURE_MS_URL+'/scanapi/tests', json=scan_pars)
     response = r.json()
+    
+    # TODO wait for evaluation to finish before returning in order to work with celery
+    # call given eval_id on get of azure_ms
+    
     return response
 
 
@@ -71,8 +92,13 @@ class StartTest(Resource):
         
         print(api.payload)
         request_params = api.payload
+        
+        # filter requirements for ones for azure_ms
+        # delegate azure requirements to azure_ms
+        
         task = pass_scan.apply_async(args=(request_params, ))
         extra_headers['Location'] = "/scanapi/tests/" + task.id
+        
         return {}, 202, extra_headers
     
     @api.doc(False)
@@ -90,10 +116,15 @@ class TestResult(Resource):
         """
         task = pass_scan.AsyncResult(task_id)
         results = task.info
+        
+        # if evaluation is not yet done, tell secrat to check back again (102 - "Processing")
         if task.state == 'PENDING':
             time.sleep(3)
             task = pass_scan.AsyncResult(task_id)
             results = task.info
+            
+            return {}, 102, extra_headers
+            
         # adapting to the expected output
         if task.state == "SUCCESS":
             for requirement in results:
@@ -103,8 +134,6 @@ class TestResult(Resource):
                 requirement['testResults'] = []
                 requirement['testResults'].append(result)
             return task.info, 200, extra_headers
-        else:
-            return {}, 500, extra_headers
 
 
     @api.doc(responses={200: 'Stop a running test.'})
@@ -121,4 +150,4 @@ class TestResult(Resource):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001, ssl_context='adhoc')
+    app.run(debug=True, port=5001)
