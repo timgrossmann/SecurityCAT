@@ -114,8 +114,14 @@ class EvaluationWorker(Thread):
         try:
             evaluation_result = self.__get_evaluation_summary()
 
-            self.output_res["result"]["status"] = "FAILED" if evaluation_result['nonCompliantResources'] > 0 else "SUCCESS"
-            self.output_res["result"]["message"] = json.dumps(evaluation_result, indent=4)
+            self.output_res["result"]["status"] = (
+                "FAILED"
+                if evaluation_result["nonCompliantResources"] > 0
+                else "SUCCESS"
+            )
+            self.output_res["result"]["message"] = json.dumps(
+                evaluation_result, indent=4
+            )
 
             self.running_evaluations[self.eval_id] = self.output_res
             return

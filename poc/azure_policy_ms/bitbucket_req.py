@@ -1,9 +1,9 @@
 from os import environ
-import re
 import requests
 
 user = environ.get("SOCIALCODING_USER")
 pw = environ.get("SOCIALCODING_PW")
+
 
 def get_from_bitbucket(url):
     """Gets the json resource at the given url from bitbucket
@@ -19,5 +19,4 @@ def get_from_bitbucket(url):
     url = url.replace("/browse/", "/raw/", 1)
 
     r = requests.get(url, auth=(user, pw))
-    
     return r.json()

@@ -140,15 +140,12 @@ class PolicyEvaluation(Resource):
             "result": {"message": "None", "status": "FAILED", "confidenceLevel": "0",},
         }
 
-        # if policy definition is string then try parse
-        # if not valid, abort
         try:
             policy_json = get_from_bitbucket(policy_json_url)
+            app.logger.debug(f"Retrieved JSON from Socialcoding: {policy_json}")
         except Exception as err:
             app.logger.error(f"Error retrieving policy json - {err}")
-            output_res["result"][
-                "message"
-            ] = f"Error retrieving policy json - {err}"
+            output_res["result"]["message"] = f"Error retrieving policy json - {err}"
             output_res["result"]["status"] = "ERROR"
 
             return output_res
@@ -156,6 +153,7 @@ class PolicyEvaluation(Resource):
         output_res["result"]["status"] = "IN_PROGRESS"
         running_evaluations[eval_id] = output_res
 
+        # TODO replace with worker pool with queue to avoid spawning hundreds of threads
         try:
             worker = EvaluationWorker(
                 running_evaluations,
@@ -169,7 +167,7 @@ class PolicyEvaluation(Resource):
                 policy_json,
                 assignment_id,
             )
-            # Setting daemon to True will let the main thread exit even though the workers are blocking
+            # daemon will let main thread exit even though workers blocking
             worker.daemon = True
             worker.start()
         except Exception as err:
@@ -188,4 +186,4 @@ class PolicyEvaluation(Resource):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)  # threaded=True by default
+    app.run(debug=True, port=5000)
