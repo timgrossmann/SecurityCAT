@@ -7,8 +7,12 @@
 ## List of Figures
 
 
-## Introduction´
+## Introduction
 Why testing at all?
+
+Especially in the corporate world, projects pass so called Quality Gates which also require a baseline of compliance and security testing to be done.
+(Quality Gates at Bosch) 
+
 What happens when testing?
 Model based approach, how to know what is wrong or right without a defined model?
 Where is the model in Azure etc.
@@ -16,38 +20,80 @@ Abstract testing further with a middle layer that triggers testing for different
 Lacks systematic approach
 
 **Model based approach**: Replaces test design by automated test generation based on model of architecture or system
+Infrastructure as code, tools e.g. terraform, infrastructure defined through a config file (properties easily testable)
+
+Compliance system in e.g. (Policies) Azure, (Config Rules) AWS 
+
 **Test automation approach**: Replaces manual execution of designed test cases by automated test scripts
 We use test automation approach
 
 ### Traditional testing
 
-#### Source Code leak testing
-Checking for leaked credentials etc.
+#### Source Code leak testing (static source code analysis)
+Checking for leaked credentials etc. (https://www.gitguardian.com/private)
+Security testing for source code (https://owasp.org/www-community/Source_Code_Analysis_Tools)
+Strengths
+    Scales well – can be run on lots of software, and can be run repeatedly (as with nightly builds or continuous integration)
+    Useful for things that such tools can automatically find with high confidence, such as buffer overflows, SQL Injection Flaws, and so forth
+    Output is good for developers – highlights the precise source files, line numbers, and even subsections of lines that are affected
+Weaknesses
+    Many types of security vulnerabilities are difficult to find automatically, such as authentication problems, access control issues, insecure use of cryptography, etc. The current state of the art only allows such tools to automatically find a relatively small percentage of application security flaws. However, tools of this type are getting better.
+    High numbers of false positives.
+    Frequently can’t find configuration issues, since they are not represented in the code.
+    Difficult to ‘prove’ that an identified security issue is an actual vulnerability.
+    Many of these tools have difficulty analyzing code that can’t be compiled. Analysts frequently can’t compile code because they don’t have the right libraries, all the compilation instructions, all the code, etc.
+
 
 #### Governance & Compliance
 What is governance and compliance?
 
+https://dzone.com/articles/importance-governance-software
+https://www.researchgate.net/publication/232643565_Software_Development_Governance_A_Meta-management_Perspective
+
+https://www.red-gate.com/simple-talk/opinion/opinion-pieces/it-compliance-and-software-development/
+
+
 #### Functional security testing
 Check functionality, efficiency, and availabilty
+Security testing for source code (https://owasp.org/www-community/Source_Code_Analysis_Tools)
+
 
 #### Security Vulnerable testing (Penetration testing)
 Testing infrastructure and applications on infrastructure for vulnerabilites
+https://www.greycampus.com/blog/information-security/penetration-testing-step-by-step-guide-stages-methods-and-application
+
 
 ### On the need for automated testing
 No right or wrong without a model?
 
+
 #### Resource testing with Policies
 Example approach of Azure template model architecture for testing of policies.
 
+
 #### DevSecOps
-Security testing as part of the integration and deployment cycle.
+The concept behind DevSecOps integrates automated security testing into the continous quality assurance of continous development, integration, and deployment. 
+It combines Development, Security, and Operations to improve the speed, turnover time, and overall quality of products.
+
+Manual security, and compliance testing slows down release processes and therefore needs to be augmented with automated testing, and integrated into the continous software deployment lifecycle.
+
+![DevSecOps life cylce](https://twitter.com/LMaccherone/status/843644744538427392/photo/1)
+
+The schematic drawing of DevSecOps displays and explains the major elements of the life cylce.
+Security is implemented in the overall process and breaches in security or compliance lead to interrupted releases.
+In the operations phase, intrusions are detected, countermeasures taken, and attacks analysed which enables reporting that can be leveraged to improve the quality and secrity of the product in the development pase. 
+
 
 #### Drawbacks of automated testing
 Decision on compliance? 
+Security is an extremely complex topic...
+
 
 ### Related Work 
 https://arxiv.org/pdf/1202.6118.pdf
 https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4159681
+Cloud Security Automation Framework: https://ieeexplore.ieee.org/document/8064140
+
 
 
 ## An approach to automated testing using a Requirement Automation Tool (RAT) 
@@ -117,6 +163,12 @@ C/IDS defines the Bosch IT Security Framework on a strategic level by providing 
 
 
 ### Proof of Concept implementation
+
+Gateway
+
+Policy MS
+
+ZAP
 
 #### Architecture
 
