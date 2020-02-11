@@ -22,26 +22,28 @@ Lacks systematic approach
 **Model based approach**: Replaces test design by automated test generation based on model of architecture or system
 Infrastructure as code, tools e.g. terraform, infrastructure defined through a config file (properties easily testable)
 
+Azure: https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-syntax
+
 Compliance system in e.g. (Policies) Azure, (Config Rules) AWS 
 
 **Test automation approach**: Replaces manual execution of designed test cases by automated test scripts
 We use test automation approach
 
+
 ### Traditional testing
 
-#### Source Code leak testing (static source code analysis)
-Checking for leaked credentials etc. (https://www.gitguardian.com/private)
-Security testing for source code (https://owasp.org/www-community/Source_Code_Analysis_Tools)
-Strengths
-    Scales well – can be run on lots of software, and can be run repeatedly (as with nightly builds or continuous integration)
-    Useful for things that such tools can automatically find with high confidence, such as buffer overflows, SQL Injection Flaws, and so forth
-    Output is good for developers – highlights the precise source files, line numbers, and even subsections of lines that are affected
-Weaknesses
-    Many types of security vulnerabilities are difficult to find automatically, such as authentication problems, access control issues, insecure use of cryptography, etc. The current state of the art only allows such tools to automatically find a relatively small percentage of application security flaws. However, tools of this type are getting better.
-    High numbers of false positives.
-    Frequently can’t find configuration issues, since they are not represented in the code.
-    Difficult to ‘prove’ that an identified security issue is an actual vulnerability.
-    Many of these tools have difficulty analyzing code that can’t be compiled. Analysts frequently can’t compile code because they don’t have the right libraries, all the compilation instructions, all the code, etc.
+#### Static source code analysis (Static Application Security Testing (SAST))
+The "Static Source Code Analysis", as the name suggests, is performed without executing the program. It is a crucial approach to review the formal correctness, data-flow, and even credential leaks.
+Static code analysis normally implemented as one of the first gates of continous integration pipelines.
+
+Depending on the focus of the analysis, there are different state-of-the-art providers for static code analysis like for example credential checking on Open-Source platforms like GitHub using GitGuardian (https://www.gitguardian.com) 
+
+When focusing on security testing with static analysis, problems that can be identified with high confidence have to be targeted. Those include for example SQL Injections and Buffer Overflows.
+The OWASP-project provides a list of tooling that can (https://owasp.org/www-community/Source_Code_Analysis_Tools) be used as part of a continous integration pipeline. 
+Once a vulnerability is found, the build fails and provides detailed reporting to the developers which have to fix the issues before future builds succeed.
+
+However this approach has many drawbacks. It has a high rate of false positives which can greatly increase the time needed for manual testing and reviewing.
+In addition to that, most security vulnerabilities are difficult to find automatically. Access control issues, insecure use of cryptography are only a few examples. Even misconfigurations can't be identified without a model based approach, as discussed before.
 
 
 #### Governance & Compliance
@@ -65,6 +67,14 @@ https://www.greycampus.com/blog/information-security/penetration-testing-step-by
 
 ### On the need for automated testing
 No right or wrong without a model?
+Re-runnable (re-producable), comparably quick as part of the release process
+Automated reports
+
+"Intelligence" centralized in e.g. a DB with the attacks
+
+
+> Automated pentration testing (San Jose)
+> Yaroslav Stefinko, Manual and Automated Penetration Testing
 
 
 #### Resource testing with Policies
@@ -77,7 +87,7 @@ It combines Development, Security, and Operations to improve the speed, turnover
 
 Manual security, and compliance testing slows down release processes and therefore needs to be augmented with automated testing, and integrated into the continous software deployment lifecycle.
 
-![DevSecOps life cylce](https://twitter.com/LMaccherone/status/843644744538427392/photo/1)
+![DevSecOps life cylce](./assets/devsecops.png)
 
 The schematic drawing of DevSecOps displays and explains the major elements of the life cylce.
 Security is implemented in the overall process and breaches in security or compliance lead to interrupted releases.
@@ -85,8 +95,16 @@ In the operations phase, intrusions are detected, countermeasures taken, and att
 
 
 #### Drawbacks of automated testing
-Decision on compliance? 
 Security is an extremely complex topic...
+
+Do not perform pivot attacks (compromising one machine and then launching attacks from that machine to other areas of the network)
+Often times do not verify exploits (eliminate false positives)
+
+They often result in false positives, false negatives, require frequent patching, and cannot properly test physical security
+
+It might give a false sense of security. Being able to withstand most penetration testing attacks might give the sense that systems are 100% safe. In most cases, however, penetration testing is known to company security teams who are ready to look for signs and are prepared to defend. Real attacks are unannounced and, above all, unexpected.
+
+> Yaroslav Stefinko, Manual and Automated Penetration Testing
 
 
 ### Related Work 
@@ -101,9 +119,30 @@ Cloud Security Automation Framework: https://ieeexplore.ieee.org/document/806414
 How does Bosch currently test the applications?
 Workflow etc.
 
-### SecurityRAT
+### OWASP SecurityRAT
 Where do requirements come from and which requirements are important?
 How to decide what is important?
+
+Simplify security requirement management during development using automation approaches.
+Description
+
+The core functionality of SecurityRAT (“Security Requirement Automation Tool”) can be described in the following steps:
+
+    You tell SecurityRAT what kind of a software artifact you’re going to develop / are running
+    SecurityRAT tells you which requirements you should fulfill.
+    You decide how you want to handle the desired requirements.
+    You persist the the artifact state in an issue tracker and create tickets for the requirements where an explicit action is necessary
+    Throughout the continuous development of the particular artifact, you respect the rules defined in SecurityRAT and document relevant changes in requirement compliance whenever appropriate.
+
+Focus of SecurityRAT is put on automation rather then the requirements. While we offer ASVS as an initial set of requirements which you can start with, we strongly recommended to create your own set of requirements which fits your company risk profile.
+
+SecurityRAT (“Security Requirement Automation Tool”) is a tool supposed to help you with security challenges in your development projects.
+
+The basic idea is very simple: you specify the properties of an application (usually, we use the name “artifact”) that you’re developing. Based on these properties, the tool gives you a list of security requirements you should fulfill.
+
+For every single requirement, you can decide whether it should/will be implemented and add your own comment (or e.g. reasoning why you’re not going to implement it if you’ve decided against it). Once you’re done, you can persist the particular requirement set in a JIRA ticket for documentation purposes (the requirement set is attached as a YAML file).
+
+Afterwards, you can create JIRA tickets for particular requirements in a batch mode and track them with SecurityRAT. The workflow is shown on the image below:
 
 OWASP Security RAT (Requirement Automation Tool) is a tool supposed to assist with the problem of addressing security requirements during application development. The typical use case is:
 
@@ -114,8 +153,13 @@ OWASP Security RAT (Requirement Automation Tool) is a tool supposed to assist wi
 - create JIRA tickets for particular requirements in a batch mode in developer queues
 - import the main JIRA ticket into the tool anytime in order to see progress of the particular tickets
 
-... Example image of SecurityRAT
+https://securityrat.github.io/
 
+![SecurityRAT schema](assets/security_rat.png)
+
+Finally, you can use SecurityRAT to load requirement set persisted in Step 3. SecurityRAT will also load the information to all issues created for this set and display their status.
+
+![SecurityRAT schema](assets/secrat_screen.png)
 
 #### OWASP
 What is OWASP what is part of it?
@@ -163,6 +207,8 @@ C/IDS defines the Bosch IT Security Framework on a strategic level by providing 
 
 
 ### Proof of Concept implementation
+
+SecurityCAT...
 
 Gateway
 

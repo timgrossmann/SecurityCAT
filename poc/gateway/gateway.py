@@ -46,17 +46,6 @@ scan_definition = api.model('ScanDefinition', {
             description="Optional url endpoint of azure resource ([default] 'https://management.azure.com/')",
             required=False,
         ),
-        "policyId": fields.String(
-            description="Unique identifier for policy definition", required=True,
-        ),
-        "policyJsonUrl": fields.String(
-            description="URL of the json policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure",
-            required=True,
-        ),
-        "assignmentId": fields.String(
-            description="Optional unique identifier for policy assignment (policyId will be used if not given)",
-            required=False,
-        ),
     })),
     'requirements': fields.List(
         fields.String,
@@ -68,12 +57,30 @@ scan_definition = api.model('ScanDefinition', {
 
 # delegating the scan to the microservice
 @celery.task(bind=True)
-def pass_scan(self, scan_pars):
-    print(scan_pars)
-    
+def pass_scan(self, requirement, test_properties):
     # starting the evaluation, get back eval_id of test
-    r = requests.post(AZURE_MS_URL+'/scanapi/tests', json=scan_pars)
-    response = r.json()
+    
+    """Add to json:
+            "policyId": fields.String(
+        description="Unique identifier for policy definition", required=True,
+        ),
+        "policyJsonUrl": fields.String(
+            description="URL of the json policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure",
+            required=True,
+        ),
+        "assignmentId": fields.String(
+            description="Optional unique identifier for policy assignment (policyId will be used if not given)",
+            required=False,
+        ),
+    """
+    
+    # One task per requirement
+    # where to get the additional parameters for each test?
+    
+    if requirement.startsWith("MSA"):
+        app.logger.info("Azure check")
+        r = requests.post(AZURE_MS_URL+'/scanapi/tests', json=test_properties)
+        response = r.json()
     
     # TODO wait for evaluation to finish before returning in order to work with celery
     # call given eval_id on get of azure_ms
@@ -90,14 +97,17 @@ class StartTest(Resource):
         Starting a test
         """
         
-        print(api.payload)
+        app.logger.info(api.payload)
         request_params = api.payload
         
         # filter requirements for ones for azure_ms
         # delegate azure requirements to azure_ms
         
-        task = pass_scan.apply_async(args=(request_params, ))
-        extra_headers['Location'] = "/scanapi/tests/" + task.id
+        for requirement in request_params["requirements"]:
+            task = pass_scan.apply_async(args=(requirement, request_params["testProperties"]))
+            extra_headers['Location'] = "/scanapi/tests/" + task.id
+            
+            app.logger.info(task.id)
         
         return {}, 202, extra_headers
     
@@ -108,6 +118,7 @@ class StartTest(Resource):
 
 # fetch the test result
 @ns.route('/tests/<task_id>')
+@ns.param('task_id', 'The task identifier')
 class TestResult(Resource):
     @api.doc(responses={200: 'Result of the scan'})
     def get(self, task_id):
@@ -117,13 +128,11 @@ class TestResult(Resource):
         task = pass_scan.AsyncResult(task_id)
         results = task.info
         
-        # if evaluation is not yet done, tell secrat to check back again (102 - "Processing")
+        app.logger.info(f"Called with it {task}")
+        
+        # if evaluation is not yet done, tell secrat to check back again
         if task.state == 'PENDING':
-            time.sleep(3)
-            task = pass_scan.AsyncResult(task_id)
-            results = task.info
-            
-            return {}, 102, extra_headers
+            return { 'status': 'PENDING' }, 200, extra_headers
             
         # adapting to the expected output
         if task.state == "SUCCESS":
