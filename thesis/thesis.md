@@ -119,54 +119,35 @@ Cloud Security Automation Framework: https://ieeexplore.ieee.org/document/806414
 How does Bosch currently test the applications?
 Workflow etc.
 
+
 ### OWASP SecurityRAT
-Where do requirements come from and which requirements are important?
-How to decide what is important?
+The OWASP Security Requirement Automation Tool, short SecurityRAT, is an application designed to streamline the management of security requirements throughout the development process.
+It comes with an initial set of requirements stated in the ASVS (Application Security Verification Standard). Users, however, are encouraged to create their own set of requirements since risk profiles differ greatly between companies.
+SecurityRAT emphasizes automation over merely listing requirements. Properties of an appication in development are secified, then used to filter down the set of requirements to only get the ones that have to be fulfilled. 
 
-Simplify security requirement management during development using automation approaches.
-Description
+The requirements can be annotaded about whether they have to be implemented or not. In addition to that, the reasoning or result can be documented in SecurityRAT.
 
-The core functionality of SecurityRAT (“Security Requirement Automation Tool”) can be described in the following steps:
+![SecurityRAT screen](assets/secrat_screen.png)
 
-    You tell SecurityRAT what kind of a software artifact you’re going to develop / are running
-    SecurityRAT tells you which requirements you should fulfill.
-    You decide how you want to handle the desired requirements.
-    You persist the the artifact state in an issue tracker and create tickets for the requirements where an explicit action is necessary
-    Throughout the continuous development of the particular artifact, you respect the rules defined in SecurityRAT and document relevant changes in requirement compliance whenever appropriate.
-
-Focus of SecurityRAT is put on automation rather then the requirements. While we offer ASVS as an initial set of requirements which you can start with, we strongly recommended to create your own set of requirements which fits your company risk profile.
-
-SecurityRAT (“Security Requirement Automation Tool”) is a tool supposed to help you with security challenges in your development projects.
-
-The basic idea is very simple: you specify the properties of an application (usually, we use the name “artifact”) that you’re developing. Based on these properties, the tool gives you a list of security requirements you should fulfill.
-
-For every single requirement, you can decide whether it should/will be implemented and add your own comment (or e.g. reasoning why you’re not going to implement it if you’ve decided against it). Once you’re done, you can persist the particular requirement set in a JIRA ticket for documentation purposes (the requirement set is attached as a YAML file).
-
-Afterwards, you can create JIRA tickets for particular requirements in a batch mode and track them with SecurityRAT. The workflow is shown on the image below:
-
-OWASP Security RAT (Requirement Automation Tool) is a tool supposed to assist with the problem of addressing security requirements during application development. The typical use case is:
-
-- specify parameters of the software artifact you're developing
-- based on this information, list of common security requirements is generated
-- go through the list of the requirements and choose how you want to handle the requirements
-- persist the state in a JIRA ticket (the state gets attached as a YAML file)
-- create JIRA tickets for particular requirements in a batch mode in developer queues
-- import the main JIRA ticket into the tool anytime in order to see progress of the particular tickets
-
-https://securityrat.github.io/
+The focus on automation becomes present through the integration of JIRA into the tool. JIRA tickets can automatically be created, tracked, and documented with SecurityRAT.
 
 ![SecurityRAT schema](assets/security_rat.png)
+> Source: https://securityrat.github.io/
 
-Finally, you can use SecurityRAT to load requirement set persisted in Step 3. SecurityRAT will also load the information to all issues created for this set and display their status.
+The process flow of SecurityRAT can be described as follows:
+1. Property specification of the software project, called artifact 
+1. Common security requirements are listed as a subset of the given requirements database
+1. Decide which requirements are needed and how they are handled
+1. Create automated JIRA tickets for state tracking of open issues
 
-![SecurityRAT schema](assets/secrat_screen.png)
+SecurityRAT provides additional automation for project ecxel sheet export, training slides creation, and with SecurityCAT, automted testing of trivial technical measures.
+
 
 #### OWASP
-What is OWASP what is part of it?
+The Open Web Application Security Project, short OWASP, is a non-profit organization which aims to improve web application security by providing freely available eductional material. The material includes different tooling, on-demand videos, forums and extensive documentation. 
+The OWASP project is mostly known through the open-source projects, created and maintained by the community.
+One of their most popular projects is the OWASP Top 10 which lists the most common vulnerabilities for web applications.
 
-The Open Web Application Security Project, or OWASP, is an international non-profit organization dedicated to web application security. One of OWASP’s core principles is that all of their materials be freely available and easily accessible on their website, making it possible for anyone to improve their own web application security. The materials they offer include documentation, tools, videos, and forums. 
-
-The OWASP Foundation, a 501(c)(3) non-profit organization (in the USA) established in 2004, supports the OWASP infrastructure and projects. Since 2011, OWASP is also registered as a non-profit organization in Belgium under the name of OWASP Europe VZW.
 
 #### EISA 
 What is EISE what is part of it?
