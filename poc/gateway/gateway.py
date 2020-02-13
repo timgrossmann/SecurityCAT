@@ -31,21 +31,21 @@ extra_headers = {'Access-Control-Allow-Origin': SECRAT_URL, 'Access-Control-Allo
 # Parameters given for a start of a scan
 scan_definition = api.model('ScanDefinition', {
     'testProperties': fields.Nested(api.model('TestProperties', {
-        "tenantId": fields.String(
+        "azure_tenant_id": fields.String(
             description="Tenant-id from Azure AD", required=True,
         ),
-        "subscriptionId": fields.String(
+        "azure_subscription_id": fields.String(
             description="Subscription_id of azure subscription", required=True,
         ),
-        "clientId": fields.String(
+        "azure_client_id": fields.String(
             description="Client id from application for service principal",
             required=True,
         ),
-        "clientSecret": fields.String(
+        "azure_client_secret": fields.String(
             description="Client secret from application for service principal",
             required=True,
         ),
-        "resource": fields.String(
+        "azure_resource": fields.String(
             description="Optional url endpoint of azure resource ([default] 'https://management.azure.com/')",
             required=False,
         ),
@@ -73,13 +73,13 @@ def trigger_azure_eval(requirement, test_properties):
     
     # check if policy is there, then use the last part of it as id
     # last part of the passed url
-    eval_properties["policyId"] = requirement["policyId"]
+    eval_properties["policy_id"] = requirement["policy_id"]
     
     # full URL of the policy
-    eval_properties["policyJsonUrl"] = requirement["policyJsonUrl"]
+    eval_properties["policy_json_url"] = requirement["policy_json_url"]
     
-    # use policyId by default for now
-    eval_properties["assignmentId"] = requirement["assignmentId"]
+    # use policy_id by default for now
+    eval_properties["assignment_id"] = requirement["assignment_id"]
     
     r = requests.post(AZURE_MS_URL+'/api/tests', json=eval_properties)
     response = r.json()
@@ -87,13 +87,13 @@ def trigger_azure_eval(requirement, test_properties):
     app.logger.info(response)
     
     status_url = f"{AZURE_MS_URL}/api/tests/{response['id']}"
-    status = requests.get(status_url).json().get("status", "ERROR")
+    status_res = requests.get(status_url)
             
-    while status == "PENDING":
+    while status_res.json().get("status", "ERROR") == "PENDING":
         sleep(CHECK_INTERVAL)
-        status = requests.get(status_url).json().get("status", "ERROR")
+        status_res = requests.get(status_url)
     
-    return status
+    return status_res.json()
 
 # delegating the scan to the microservice
 @celery.task(bind=True)
