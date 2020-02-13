@@ -205,6 +205,12 @@ ZAP
 
 #### Custom scripts... ?
 
+#### Semmle QL
+
 ## Summary & Conclusion
+
+https://www.popularmechanics.com/technology/security/a16827/ai-capture-the-flag/
+https://thenextweb.com/insider/2016/08/04/watch-ai-hack-darpa-cyber/
+http://www.xinhuanet.com/english/2018-08/13/c_137387613.htm
 
 ## References

@@ -112,6 +112,7 @@ class PolicyResult(Resource):
         if not eval_state:
             return get_error_res(test_id)
 
+        app.logger.info(eval_state)
         return eval_state
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import time
+from time import sleep
 
 from flask import Flask, jsonify, url_for, request
 from flask_restplus import Resource, Api, fields
@@ -12,6 +12,9 @@ from celery.task.control import inspect, revoke
 # URL of your instance of SecurityRAT
 SECRAT_URL = 'https://fe0vmc1201.de.bosch.com/' 
 AZURE_MS_URL = 'http://localhost:5000'
+
+# Interval in which the state of the evaluation should be checked (seconds)
+CHECK_INTERVAL = 10
 
 app = Flask(__name__)
 api = Api(app)
@@ -54,39 +57,58 @@ scan_definition = api.model('ScanDefinition', {
     ),
 })
 
+def trigger_azure_eval(requirement, test_properties):
+    """Triggers the evaluation of given parameters with the azure microservice
+    
+    Parameters:
+    requirement (dict): dictionary containing the properties of the "row" of securityRAT
+    test_properties (dict): dictionary containing the elements of "testProperties" from "ScanDefinition"
+    
+    Returns:
+    dict: dictionary containing the result of the test evaluation
+    """
+    
+    eval_properties = {**test_properties}
+    app.logger.info(eval_properties)
+    
+    # check if policy is there, then use the last part of it as id
+    # last part of the passed url
+    eval_properties["policyId"] = requirement["policyId"]
+    
+    # full URL of the policy
+    eval_properties["policyJsonUrl"] = requirement["policyJsonUrl"]
+    
+    # use policyId by default for now
+    eval_properties["assignmentId"] = requirement["assignmentId"]
+    
+    r = requests.post(AZURE_MS_URL+'/api/tests', json=eval_properties)
+    response = r.json()
+    
+    app.logger.info(response)
+    
+    status_url = f"{AZURE_MS_URL}/api/tests/{response['id']}"
+    status = requests.get(status_url).json().get("status", "ERROR")
+            
+    while status == "PENDING":
+        sleep(CHECK_INTERVAL)
+        status = requests.get(status_url).json().get("status", "ERROR")
+    
+    return status
 
 # delegating the scan to the microservice
 @celery.task(bind=True)
 def pass_scan(self, requirement, test_properties):
-    # starting the evaluation, get back eval_id of test
+    result = {}
     
-    """Add to json:
-            "policyId": fields.String(
-        description="Unique identifier for policy definition", required=True,
-        ),
-        "policyJsonUrl": fields.String(
-            description="URL of the json policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure",
-            required=True,
-        ),
-        "assignmentId": fields.String(
-            description="Optional unique identifier for policy assignment (policyId will be used if not given)",
-            required=False,
-        ),
-    """
+    if requirement["name"].startswith("MSA"):
+        result = trigger_azure_eval(requirement, test_properties)
     
-    # One task per requirement
-    # where to get the additional parameters for each test?
+    if requirement["name"].startswith("AWS"):
+        # TODO start AWS config rule evaluation
+        pass
+     
+    return result
     
-    if requirement.startsWith("MSA"):
-        app.logger.info("Azure check")
-        r = requests.post(AZURE_MS_URL+'/scanapi/tests', json=test_properties)
-        response = r.json()
-    
-    # TODO wait for evaluation to finish before returning in order to work with celery
-    # call given eval_id on get of azure_ms
-    
-    return response
-
 
 @ns.route('/tests')
 class StartTest(Resource):
@@ -104,12 +126,12 @@ class StartTest(Resource):
         # delegate azure requirements to azure_ms
         
         for requirement in request_params["requirements"]:
-            task = pass_scan.apply_async(args=(requirement, request_params["testProperties"]))
+            task = pass_scan.apply_async(args=(requirement, request_params["testProperties"],))
             extra_headers['Location'] = "/scanapi/tests/" + task.id
             
             app.logger.info(task.id)
         
-        return {}, 202, extra_headers
+        return { "id": task.id }, 202, extra_headers
     
     @api.doc(False)
     def options(self):
