@@ -19,14 +19,24 @@ Where is the model in Azure etc.
 Abstract testing further with a middle layer that triggers testing for different platforms?
 Lacks systematic approach
 
-**Model based approach**: Replaces test design by automated test generation based on model of architecture or system
+Requirement automation tool?
+
+
+*Model based approach*: Replaces test design by automated test generation based on model of architecture or system
 Infrastructure as code, tools e.g. terraform, infrastructure defined through a config file (properties easily testable)
 
 Azure: https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-syntax
 
 Compliance system in e.g. (Policies) Azure, (Config Rules) AWS 
 
-**Test automation approach**: Replaces manual execution of designed test cases by automated test scripts
+Why we need a model?
+
+*Planning based approach*: 
+Testing based on plannning:
+https://hal.inria.fr/hal-01405274/document
+
+
+*Test automation approach*: Replaces manual execution of designed test cases by automated test scripts
 We use test automation approach
 
 
@@ -71,6 +81,12 @@ Re-runnable (re-producable), comparably quick as part of the release process
 Automated reports
 
 "Intelligence" centralized in e.g. a DB with the attacks
+
+https://www.breachlock.com/automated-penetration-testing-a-myth-or-reality/
+https://blog.cymulate.com/automated-penetration-testing
+https://www.securit360.com/blog/vulnerability-scan-not-penetration-test-pentest/
+https://portswigger.net/testers/automated-penetration-testing
+https://www.veracode.com/security/automated-penetration-testing-tools
 
 
 > Automated pentration testing (San Jose)
@@ -120,10 +136,24 @@ How does Bosch currently test the applications?
 Workflow etc.
 
 
+
+For external clients, the information from SecurityRAT is exported into an Excel file and filled in there.
+
+
 ### OWASP SecurityRAT
 The OWASP Security Requirement Automation Tool, short SecurityRAT, is an application designed to streamline the management of security requirements throughout the development process.
 It comes with an initial set of requirements stated in the ASVS (Application Security Verification Standard). Users, however, are encouraged to create their own set of requirements since risk profiles differ greatly between companies.
 SecurityRAT emphasizes automation over merely listing requirements. Properties of an appication in development are secified, then used to filter down the set of requirements to only get the ones that have to be fulfilled. 
+
+The set of requirements for example contains elements specific to Microsoft Azure Implementation. Each "Implementation Type" has it's own given set of requirements.
+
+```math
+MSA-... \strict\subset EISA
+```
+
+Where MSA is the set of requirements used in the evaluation of Microsoft Azure implementations. 
+
+...add filter subset mathematical function, whole dataset subset when used azure etc.
 
 The requirements can be annotaded about whether they have to be implemented or not. In addition to that, the reasoning or result can be documented in SecurityRAT.
 
@@ -143,6 +173,7 @@ The process flow of SecurityRAT can be described as follows:
 SecurityRAT provides additional automation for project ecxel sheet export, training slides creation, and with SecurityCAT, automted testing of trivial technical measures.
 
 
+
 #### OWASP
 The Open Web Application Security Project, short OWASP, is a non-profit organization which aims to improve web application security by providing freely available eductional material. The material includes different tooling, on-demand videos, forums and extensive documentation. 
 The OWASP project is mostly known through the open-source projects, created and maintained by the community.
@@ -150,42 +181,13 @@ One of their most popular projects is the OWASP Top 10 which lists the most comm
 
 
 #### EISA 
-What is EISE what is part of it?
-What is the Bosch way of defining it?
-http://www.intranet.bosch.com/doku/eisa/
+EISA, short for Entreprise IT Security Architecure, is the internal IT Security Governance Framework used at Bosch.
+International industry and government standards like the ISO27001, Cloud Security Aliance, and NIST Special Publication have been combined to enable Bosch businesses with a holistic view on IT Security.
 
- Bosch EISA defines the Bosch basic protection level and the building blocks of IT security by defining
+It defines the building blocks and protection levels of IT security inside Bosch. Server operating systems, web servers, and networks are the resources in focus.   
+The security controls provide a baseline to build infrastructure and project that are resilient against security threats.
 
-    What IT security controls shall be put in place in order to be resilient against IT security threats,
-
-    How these security controls are positioned,
-
-    How they relate to each other and to the overall Enterprise IT architecture.
-
-Bosch EISA aims to enable IT organizations, projects and associates across the entire Bosch Group (RBW) to
-
-    gain a common understanding of IT Security,
-
-    ensure the consistent implementation of a common security baseline,
-
-    enhance compliance with Bosch-internal guidelines and regulations (primarily C/ISP CD 02900), and
-
-    align Bosch IT security with industry and government standards, for example:
-
-        ISO 27001 (full text in Bosch NormMaster),
-
-        Cloud Security Alliance (CSA) Cloud Control Matrix (CCM)
-
-        NIST Special Publication 800-53
-
-According to RB/GF 00177 C/IDS has the Governance Function for IT Security at Bosch.
-
-    “IT Security (Cyber Security) are technologies, processes and measures that protect IT systems and electronic information against internal and external cyber attacks (e.g. cyber espionage, extortion, sabotage).” (RB/GF 00177-002 - 2.19)
-
-    “Best in Class IT Security is a key factor for both internal and external digital products and services, which has to be ensured over the complete life cycle.” (RB/GF 00177-4.1) 
-
-C/IDS defines the Bosch IT Security Framework on a strategic level by providing IT Security guard rails for Bosch to protect Bosch Business Models, Products, Services and Data.
-
+The controls introduced through Bosch EISA aim to give a common understanding of IT security to associates across the entire Bosch Group as well as ensuring a consistent implementation of a security baseline that ensures compliance with internal guidelines and regulations.
 
 ### Proof of Concept implementation
 
@@ -201,10 +203,21 @@ ZAP
 
 #### Microsoft Azure Policies & Amazon Web Services Config Rules
 
+Estimated Evaluation time and trigger time chart
+
+
 #### Automated Security testing with Pacu & ZAP, Metasploit autopwn?
+
+
 
 #### Custom scripts... ?
 
+#### Semmle QL
+
 ## Summary & Conclusion
+
+https://www.popularmechanics.com/technology/security/a16827/ai-capture-the-flag/
+https://thenextweb.com/insider/2016/08/04/watch-ai-hack-darpa-cyber/
+http://www.xinhuanet.com/english/2018-08/13/c_137387613.htm
 
 ## References
