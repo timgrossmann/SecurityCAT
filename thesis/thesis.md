@@ -22,7 +22,9 @@ Lacks systematic approach
 Requirement automation tool?
 
 
-**Model based approach**: Replaces test design by automated test generation based on model of architecture or system
+### Testing Approaches
+
+#### Model based: Replaces test design by automated test generation based on model of architecture or system
 Infrastructure as code, tools e.g. terraform, infrastructure defined through a config file (properties easily testable)
 
 Azure: https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-syntax
@@ -35,16 +37,16 @@ https://books.google.de/books/about/Practical_Model_Based_Testing.html?id=8hAGtY
 
 https://resources.sei.cmu.edu/asset_files/WhitePaper/2019_019_001_539335.pdf
 
-**Planning based approach**: 
+#### Planning based**: 
 Testing based on plannning:
 https://hal.inria.fr/hal-01405274/document
 
 
-**Test automation approach**: Replaces manual execution of designed test cases by automated test scripts
+#### Test automation: Replaces manual execution of designed test cases by automated test scripts
 We use test automation approach
 
 
-### Traditional testing
+### Security Testing
 
 #### Static source code analysis (Static Application Security Testing (SAST))
 The "Static Source Code Analysis", as the name suggests, is performed without executing the program. It is a crucial approach to review the formal correctness, data-flow, and even credential leaks.
@@ -82,12 +84,12 @@ https://community.aiim.org/blogs/brandon-burke/2019/04/03/governance-vs-complian
 
 Compliance and Governance ensure alignment of the system with requirements, controls, and industry standards.
 
-**Compliance**
+##### Compliance
 According to the Cambrige Dictionary, the term "compliance" describes the conformity of a systems to a set of given rules and requirements (compliance, 2020). 
 In the context of software systems, those requirements...
 
 
-**Governance**
+##### Governance
 Governance is....
 
 https://dzone.com/articles/importance-governance-software
@@ -151,6 +153,12 @@ Security is implemented in the overall process and breaches in security or compl
 In the operations phase, intrusions are detected, countermeasures taken, and attacks analysed which enables reporting that can be leveraged to improve the quality and secrity of the product in the development pase. 
 
 
+#### Automated Pentesting
+https://github.com/RhinoSecurityLabs/pacu
+https://www.zaproxy.org
+https://portswigger.net/testers/automated-penetration-testing
+
+
 #### Drawbacks of automated testing
 Security is an extremely complex topic...
 
@@ -172,7 +180,7 @@ Cloud Security Automation Framework: https://ieeexplore.ieee.org/document/806414
 
 
 ## An approach to automated testing using a Requirement Automation Tool (RAT) 
-### Current approach to testing
+### Current testing workflow
 How does Bosch currently test the applications?
 Workflow etc.
 
@@ -241,9 +249,11 @@ Policy MS
 
 ZAP
 
+
 #### Architecture
 
 ... TODO architectural chart of the setup with the microservices
+
 
 #### Microsoft Azure Policies & Amazon Web Services Config Rules
 
@@ -263,7 +273,9 @@ Template based approach (Infrastructure as Code) => model based
 #### Custom scripts... ?
 
 
+
 #### Semmle QL... ?
+
 
 
 ## Summary & Conclusion
