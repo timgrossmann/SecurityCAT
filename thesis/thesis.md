@@ -24,7 +24,8 @@ Requirement automation tool?
 
 ### Testing Approaches
 
-#### Model based: Replaces test design by automated test generation based on model of architecture or system
+#### Model based: 
+Replaces test design by automated test generation based on model of architecture or system
 Infrastructure as code, tools e.g. terraform, infrastructure defined through a config file (properties easily testable)
 
 Azure: https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-syntax
@@ -37,33 +38,64 @@ https://books.google.de/books/about/Practical_Model_Based_Testing.html?id=8hAGtY
 
 https://resources.sei.cmu.edu/asset_files/WhitePaper/2019_019_001_539335.pdf
 
-#### Planning based**: 
-Testing based on plannning:
+#### Planning based: 
+Testing based on planning is comparable to the model-based approach. The automatic generation of test cases also needs some model of the to be tested system. 
+One of the differences is that planners (planning based tools) also create an attack plan and then transform the plan into suitable test cases.
 https://hal.inria.fr/hal-01405274/document
 
+The concept of planners is common for intelligent agents and autonomous systems. Transitions, and action sequences, are generated that transition the agent from the initial state into the given goal state.
 
-#### Test automation: Replaces manual execution of designed test cases by automated test scripts
+The objective of planning based security testing is to ensure that applications reliably handle well-known attack patterns by modeling the attack as a sequence of known actions that are carried out in a specific order.
+https://hal.inria.fr/hal-01405274/document
+
+Instead of finding new vulnerabilities, handling known attacks is the focus of a planning-based approach.
+
+In https://hal.inria.fr/hal-01405274/document the authors introduce an algorithm called PLAN4SEC(https://hal.inria.fr/hal-01405274/document) which makes use of an ordinary planner that is provided with a problem and domain description based on the DVWA (Damn vulnerable web app).
+
+```
+0: START X URL LO
+1: SENDREQ X LO SE SI
+2: RECREQ X SI
+3: PARSE X M USERNAME PASSWORD TYPE 4: CHOOSERXSS X TYPE
+5: ATTACKRXSS X XSSI M UN PW
+6: PARSERESPXSS X SCRIPT RESP
+7: PARSERESPXSSCHECK X SCRIPT RESP 8: FINISH X
+```
+> Example of the generated plan from https://hal.inria.fr/hal-01405274/document
+
+The automatically generated plan is parsed by JavaFF(https://nms.kcl.ac.uk/planning/software/javaff.html), and according to Java functions are executed in order.
+
+
+#### Test automation: 
+
+Replaces manual execution of designed test cases by automated test scripts
 We use test automation approach
+
+fuzzing
+dir busting
+brute force
+
 
 
 ### Security Testing
 
 #### Static source code analysis (Static Application Security Testing (SAST))
-The "Static Source Code Analysis", as the name suggests, is performed without executing the program. It is a crucial approach to review the formal correctness, data-flow, and even credential leaks.
-Static code analysis normally implemented as one of the first gates of continous integration pipelines.
+The "Static Source Code Analysis", as the name suggests, is performed without executing the program. It is a fundamental approach to review the formal correctness, data-flow, and even credential leaks.
+Static code analysis is generally implemented as one of the first gates of continuous integration pipelines.
 
 Depending on the focus of the analysis, there are different state-of-the-art providers for static code analysis like for example credential checking on Open-Source platforms like GitHub using GitGuardian (https://www.gitguardian.com) 
 
-When focusing on security testing with static analysis, problems that can be identified with high confidence have to be targeted. Those include for example SQL Injections and Buffer Overflows.
-The OWASP-project provides a list of tooling that can (https://owasp.org/www-community/Source_Code_Analysis_Tools) be used as part of a continous integration pipeline. 
-Once a vulnerability is found, the build fails and provides detailed reporting to the developers which have to fix the issues before future builds succeed.
+When focusing on security testing with static analysis, problems that can be identified with high confidence have to be targeted. Those include, for example, SQL Injections and Buffer Overflows.
+The OWASP-project provides a list of tooling that can (https://owasp.org/www-community/Source_Code_Analysis_Tools) be used as part of a continuous integration pipeline. 
+Once a vulnerability is found, the build fails and provides detailed reporting to the developers who have to fix the issues before future builds succeed.
 
-However this approach has many drawbacks. It has a high rate of false positives which can greatly increase the time needed for manual testing and reviewing.
-In addition to that, most security vulnerabilities are difficult to find automatically. Access control issues, insecure use of cryptography are only a few examples. Even misconfigurations can't be identified without a model based approach, as discussed before.
+However, this approach has many drawbacks. It has a high rate of false positives, which can significantly increase the time needed for manual testing and reviewing.
+In addition to that, most security vulnerabilities are difficult to find automatically. Access control issues, insecure use of cryptography are only a few examples. Even misconfigurations cannot be identified without a model-based approach, as discussed before.
 
 A more recent approach, Semmle QL, uses variant analysis to find problems in code based on a similar, known vulnerability. Code is treated as data and fed into the CodeQL engine together with custom queries that perform data analysis and track down known vulnerabilities. 
 
-A very simple query for finding all the comments that contain a TODO looks like the following.
+A straightforward query for finding all the comments that contain a TODO looks like the following.
+
 
 ```sql
 import python
@@ -73,20 +105,20 @@ where c.getText().regexpMatch("(?si).*\\bTODO\\b.*")
 select c
 ```
 
-Much more complex queries can be created for cases such as buffer overlows, critical recursion, or DOM XSS attack vectors.   
-This approach could enable more in-depth static analyses that eliminate common known vulnerabilites.
+
+Much more complex queries for cases such as buffer overflows, critical recursion, or DOM XSS attack vectors are available. 
+This approach enables more in-depth static analyses that can eliminate common known vulnerabilities.
 
 
 #### Compliance and Governance
-What is governance and compliance?
-
-https://community.aiim.org/blogs/brandon-burke/2019/04/03/governance-vs-compliance
-
-Compliance and Governance ensure alignment of the system with requirements, controls, and industry standards.
+Compliance and Governance ensure the alignment of a given system with requirements, controls, and industry standards.
+Even though they are both meant to protect an organisation form the same threats and risks, they need to be looked at seperately. 
 
 ##### Compliance
 According to the Cambrige Dictionary, the term "compliance" describes the conformity of a systems to a set of given rules and requirements (compliance, 2020). 
 In the context of software systems, those requirements...
+
+Compliance policies represents a set of requirements that the system has to meet in order to conform to the regulations and rules of the organization. 
 
 
 ##### Governance
@@ -97,7 +129,8 @@ https://www.researchgate.net/publication/232643565_Software_Development_Governan
 
 https://www.red-gate.com/simple-talk/opinion/opinion-pieces/it-compliance-and-software-development/
 
-#### Functional security testing
+
+#### Functional security testing (FST)
 Check functionality, efficiency, and availabilty
 
 https://www.researchgate.net/publication/294854003_The_need_for_functional_security_testing
@@ -263,6 +296,8 @@ Template based approach (Infrastructure as Code) => model based
 
 ... Example Azure Policy for X
 ... Example AWS Config Rule for X 
+
+
 
 
 
