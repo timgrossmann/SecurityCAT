@@ -112,22 +112,21 @@ This approach enables more in-depth static analyses that can eliminate common kn
 
 #### Compliance and Governance
 Compliance and Governance ensure the alignment of a given system with requirements, controls, and industry standards.
-Even though they are both meant to protect an organisation form the same threats and risks, they need to be looked at seperately. 
+Even though they are both meant to protect an organization form the same threats and risks, they need to be looked at separately. 
 
 ##### Compliance
-According to the Cambrige Dictionary, the term "compliance" describes the conformity of a systems to a set of given rules and requirements (compliance, 2020). 
-In the context of software systems, those requirements...
+According to the Cambridge Dictionary, the term "compliance" describes the conformity of a system to a set of given rules and requirements (compliance, 2020). 
+This means that a system must meet those requirements in order to conform to the regulations and rules of the organization. 
 
-Compliance policies represents a set of requirements that the system has to meet in order to conform to the regulations and rules of the organization. 
+In the context of software systems, requirements can be both organizational and technical. Organizational measures consider the conceptual requirements of a system, like defining and designing an access role concept. In contrast, technical measures define less abstract and more testable requirements like the state and format of logging in our applications. 
 
+Compliance is only one of the conceptual entities combined in the process of Governance.
 
 ##### Governance
-Governance is....
+\citep{bannerman2009} describes Governance as "a multi-dimensional concept, encompassing elements of organizational stewardship, accountability, risk management, compliance, control, propriety, functional oversight, resource allocation, and capability. It tends to be defined from one of two perspectives: functionally, in terms of what Governance does (e.g., assigning and administering decision rights, responsibilities, and accountabilities) or; structurally, in terms of what it looks like (a framework of interrelated boards, councils, and committees)."
 
-https://dzone.com/articles/importance-governance-software
-https://www.researchgate.net/publication/232643565_Software_Development_Governance_A_Meta-management_Perspective
+In the domain of software development, Governance can be described as a mechanism to ensure that defined engineering and business needs are met. Software development governance defines processes for "the assignment and maintenance of software development capability decision rights, governance responsibilities and accountabilities; software development capability planning, monitoring and review processes; issue escalation procedures, and stakeholder consultation". \citep{bannerman2009}
 
-https://www.red-gate.com/simple-talk/opinion/opinion-pieces/it-compliance-and-software-development/
 
 
 #### Functional security testing (FST)
@@ -159,7 +158,7 @@ https://www.veracode.com/security/automated-penetration-testing-tools
 > Yaroslav Stefinko, Manual and Automated Penetration Testing
 
 
-#### Resource testing with Policies
+#### Automated Resource Compliance Testing with Policies
 Example approach of Azure template model architecture for testing of policies.
 
 https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/overview
@@ -211,7 +210,6 @@ https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4159681
 Cloud Security Automation Framework: https://ieeexplore.ieee.org/document/8064140
 
 
-
 ## An approach to automated testing using a Requirement Automation Tool (RAT) 
 ### Current testing workflow
 How does Bosch currently test the applications?
@@ -257,10 +255,33 @@ SecurityRAT provides additional automation for project ecxel sheet export, train
 
 
 
-#### OWASP
+#### Open Web Application Security Project (OWASP)
 The Open Web Application Security Project, short OWASP, is a non-profit organization which aims to improve web application security by providing freely available eductional material. The material includes different tooling, on-demand videos, forums and extensive documentation. 
 The OWASP project is mostly known through the open-source projects, created and maintained by the community.
 One of their most popular projects is the OWASP Top 10 which lists the most common vulnerabilities for web applications. The Application Security Verification Standard (ASVS) is another of OWASP's flagship projects that is used as one of the baselines for the requirement set of the Bosch EISA. 
+
+
+#### Application Security Verification Standard (ASVS)
+The Application Security Verification Standard, short ASVS, is a community-driven project that aims to provide a baseline of security controls for web application testing.
+It was developed with two main uses in mind. 
+As a metric, it supports developers to estimate the "degree of trust" (ASVS document) that can be placed in their applications.
+As a guide, it provides a base for application security requirements in contracts. It tells developers what security controls need to be built into the application to comply with the given requirements.
+
+ASVS can be used to establish a level of confidence in the security of Web applications (ASVS document). This is achieved by defining three levels, which are categorized as follows.
+
+"Level 1 is for low assurance levels and is completely penetration testable
+
+Level 2 is for applications that contain sensitive data, which requires protection and is the recommended level for most apps.
+
+Level 3 is for the most critical applications - applications that perform high-value transactions, contain sensitive medical data, or any application that requires the highest level of trust." (ASVS document)"
+
+#### Cloud Computing Compliance Controls Catalogue (C5)
+The C5, published by the Federal Office of Information Security, provides a set of criteria to assess the information security of cloud services. (https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/CloudComputing/ComplianceControlsCatalogue-Cloud_Computing-C5.pdf?__blob=publicationFile&v=3)
+Since there is no defacto standard, only several context-specific standards, C5 aids customers to get an overview at a higher level of security. 
+
+It is divided into 17 sections that define requirements for different domains, including standard information security entities like "Cryptography and key management", and also more organizational domains like "Personnel", which assures that employees are aware of their responsibilities and the confidentiality of the assets they handle. 
+
+C5 itself builds on top of national and international standards such as ISO/IEC 27001, the Cloud Controls Matrix, the BSI IT-Grundschutz, and German standards such as BSI SaaS Sicherheitsprofile. (https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/CloudComputing/ComplianceControlsCatalogue-Cloud_Computing-C5.pdf?__blob=publicationFile&v=3)
 
 
 #### EISA 
@@ -278,9 +299,11 @@ SecurityCAT...
 
 Gateway
 
-Policy MS
+Policy MS (and AWS Config Rule basics)
 
 ZAP
+
+Custom Script
 
 
 #### Architecture
@@ -288,8 +311,7 @@ ZAP
 ... TODO architectural chart of the setup with the microservices
 
 
-#### Microsoft Azure Policies & Amazon Web Services Config Rules
-
+#### Automated Infrastructure Testing
 Template based approach (Infrastructure as Code) => model based
 
 ... Estimated Evaluation time and trigger time chart
@@ -299,18 +321,17 @@ Template based approach (Infrastructure as Code) => model based
 
 
 
+##### Microsoft Azure Policies 
+
+##### Amazon Web Services Config Rules
 
 
-#### Automated Security testing with Pacu & ZAP, Metasploit autopwn?
+#### Autoamted Application Testing
+
+##### Security Testing ZAP
 
 
-
-#### Custom scripts... ?
-
-
-
-#### Semmle QL... ?
-
+#### Custom Testing Scripts
 
 
 ## Summary & Conclusion
