@@ -160,16 +160,18 @@ In a study conducted by the German Federal Office for Information Security (http
 In the first phase, the requirements and objectives, as well as the procedures, of the test have to be defined with the client. The project has to be scoped and should be written down in the contract to avoid any kind of legal infringements.
 
 **Phase 2: Reconnaissance**
-Reconnaissance is strategic obeservation. In the second phase, a complete and detailed overview of the system, including possible attack vectors, is gathered. Without throughout observation and planning, 
+Reconnaissance is strategic obeservation. In the second phase, a complete and detailed overview of the system, including possible attack vectors, is gathered and documented.
 
 **Phase 3: Analyzing information and risks**
-...
+Phase 3 can act as a funnel to further filter down possible targets. The process of Threat and Risk Analysis (TaRAs), as it is called at SEC team at ETAS, includes defined goals for the test, potential risks to the system and an estimate of the time required for system evaluation. 
 
 **Phase 4: Active intrusion attempts**
-...
+Given the outline and analysis from previous phases, this phase covers the attack on the defined system to the in the analysis defined extend.
+
+On systems with high availability or integrity requirements, potential negative effects have to be considered in advance. For those systems, patches to prevent full system failures, might be installed before testing. 
 
 **Phase 5: Final analysis**
-...
+The last phase defines the requirements for report generation. The final report should "contain an evaluation of the vulnerabilities located in the form of potential risks and recommendations for eliminating the vulnerabilities and risks". It also has to disclose the done tests and found vulnerabilites. ((https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/Studies/Penetration/penetration_pdf.pdf?__blob=publicationFile&v=1) Seite 46)
 
 
 This manual process is time and resource intensive while parts of it, especially reporting, are highly repetivtive and display a high potential of automatability. (https://www.greycampus.com/blog/information-security/penetration-testing-step-by-step-guide-stages-methods-and-application)
