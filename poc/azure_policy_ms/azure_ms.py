@@ -65,7 +65,7 @@ policy_eval_definition = api.model(
 policy_eval_result = api.model(
     "PolicyEvalResultStructure",
     {
-        "id": fields.String(description="Unique id of the "),
+        "id": fields.String(description="Unique id of the policy evaluation"),
         "result": fields.Nested(
             api.model(
                 "PolicyEvalResult",
