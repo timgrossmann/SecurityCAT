@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import time
+from time import sleep
 
 from flask import Flask, jsonify, url_for, request
 from flask_restplus import Resource, Api, fields
@@ -12,6 +12,9 @@ from celery.task.control import inspect, revoke
 # URL of your instance of SecurityRAT
 SECRAT_URL = "https://fe0vmc1201.de.bosch.com/"
 AZURE_MS_URL = "http://localhost:5000"
+
+# Interval in which the state of the evaluation should be checked (seconds)
+CHECK_INTERVAL = 10
 
 app = Flask(__name__)
 api = Api(app)
@@ -38,28 +41,29 @@ scan_definition = api.model(
             api.model(
                 "TestProperties",
                 {
-                    "tenantId": fields.String(
+                    "azure_tenant_id": fields.String(
                         description="Tenant-id from Azure AD", required=True,
                     ),
-                    "subscriptionId": fields.String(
+                    "azure_subscription_id": fields.String(
                         description="Subscription_id of azure subscription",
                         required=True,
                     ),
-                    "clientId": fields.String(
+                    "azure_client_id": fields.String(
                         description="Client id from application for service principal",
                         required=True,
                     ),
-                    "clientSecret": fields.String(
+                    "azure_client_secret": fields.String(
                         description="Client secret from application for service principal",
                         required=True,
                     ),
-                    "resource": fields.String(
+                    "azure_resource": fields.String(
                         description="Optional url endpoint of azure resource ([default] 'https://management.azure.com/')",
                         required=False,
                     ),
                 },
             )
         ),
+        # TODO adjust definition to dict and not only string containing short name
         "requirements": fields.List(
             fields.String,
             required=True,
@@ -69,37 +73,58 @@ scan_definition = api.model(
 )
 
 
+def trigger_azure_eval(requirement, test_properties):
+    """Triggers the evaluation of given parameters with the azure microservice
+    
+    Parameters:
+    requirement (dict): dictionary containing the properties of the "row" of securityRAT
+    test_properties (dict): dictionary containing the elements of "testProperties" from "ScanDefinition"
+    
+    Returns:
+    dict: dictionary containing the result of the test evaluation
+    """
+
+    eval_properties = {**test_properties}
+    app.logger.info(eval_properties)
+
+    # check if policy is there, then use the last part of it as id
+    # last part of the passed url
+    eval_properties["policy_id"] = requirement["policy_id"]
+
+    # full URL of the policy
+    eval_properties["policy_json_url"] = requirement["policy_json_url"]
+
+    # use policy_id by default for now
+    eval_properties["assignment_id"] = requirement["assignment_id"]
+
+    r = requests.post(AZURE_MS_URL + "/api/tests", json=eval_properties)
+    response = r.json()
+
+    app.logger.info(response)
+
+    status_url = f"{AZURE_MS_URL}/api/tests/{response['id']}"
+    status_res = requests.get(status_url)
+
+    while status_res.json().get("status", "ERROR") == "PENDING":
+        sleep(CHECK_INTERVAL)
+        status_res = requests.get(status_url)
+
+    return status_res.json()
+
+
 # delegating the scan to the microservice
 @celery.task(bind=True)
 def pass_scan(self, requirement, test_properties):
-    # starting the evaluation, get back eval_id of test
+    result = {}
 
-    """Add to json:
-            "policyId": fields.String(
-        description="Unique identifier for policy definition", required=True,
-        ),
-        "policyJsonUrl": fields.String(
-            description="URL of the json policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure",
-            required=True,
-        ),
-        "assignmentId": fields.String(
-            description="Optional unique identifier for policy assignment (policyId will be used if not given)",
-            required=False,
-        ),
-    """
+    if requirement["name"].startswith("MSA"):
+        result = trigger_azure_eval(requirement, test_properties)
 
-    # One task per requirement
-    # where to get the additional parameters for each test?
+    if requirement["name"].startswith("AWS"):
+        # TODO start AWS config rule evaluation
+        pass
 
-    if requirement.startsWith("MSA"):
-        app.logger.info("Azure check")
-        r = requests.post(AZURE_MS_URL + "/scanapi/tests", json=test_properties)
-        response = r.json()
-
-    # TODO wait for evaluation to finish before returning in order to work with celery
-    # call given eval_id on get of azure_ms
-
-    return response
+    return result
 
 
 @ns.route("/tests")
@@ -123,13 +148,13 @@ class StartTest(Resource):
 
         for requirement in request_params["requirements"]:
             task = pass_scan.apply_async(
-                args=(requirement, request_params["testProperties"])
+                args=(requirement, request_params["testProperties"],)
             )
             extra_headers["Location"] = "/scanapi/tests/" + task.id
 
             app.logger.info(task.id)
 
-        return {}, 202, extra_headers
+        return {"id": task.id}, 202, extra_headers
 
     @api.doc(False)
     def options(self):
@@ -155,6 +180,7 @@ class TestResult(Resource):
             return {"status": "PENDING"}, 200, extra_headers
 
         # adapting to the expected output
+        # TODO fix success section of call
         if task.state == "SUCCESS":
             for requirement in results:
                 requirement["requirement"] = requirement.pop("req")
@@ -166,10 +192,24 @@ class TestResult(Resource):
 
     @api.doc(responses={200: "Stop a running test."})
     def delete(self, task_id):
+        """Stopps the test with the given task_id
+    
+        Parameters:
+        task_id (string): The unique task identifier
+        
+        Returns:
+        dict: dictionary containing the status of the deletion
         """
-        Stopping a test
-        """
-        revoke(task_id, terminate=True)
+
+        try:
+            revoke(task_id, terminate=True)
+            return {"status": "SUCCESS"}
+
+        except Exception as err:
+            return {
+                "status": "ERROR",
+                "message": f"Could not revoke task with id {task_id} - {err}",
+            }
 
     @api.doc(False)
     def options(self):

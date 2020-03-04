@@ -135,6 +135,7 @@ In the domain of software development, Governance can be described as a mechanis
 
 
 #### Functional security testing (FST)
+<<<<<<< HEAD
 In the context of software development, functional testing can cover different scopes. When done in an isolated environment rather than an operational context, it is called "Unit Testing". When tested together with other applications of the system, it is called "Integration Testing". (https://www.researchgate.net/publication/294854003_The_need_for_functional_security_testing)
 
 Functional security testing, on the other hand, is focused on ensuring that applications do not act in ways they are not meant to, regardless of the scoping. The critical element of this approach is "Negative Testing," which tests explicitly for misbehavior, for example, on the corrupted or wrong input. Given the vast amount of attack vectors, this is a broad and open-ended task.
@@ -164,10 +165,42 @@ Reconnaissance is a strategic observation. In the second phase, a complete and d
 
 **Phase 3: Analyzing information and risks**
 Phase 3 can act as a funnel to further filter down possible targets. The process of Threat and Risk Analysis (TaRAs), as it is called at the SEC team at ETAS, includes defined goals for the test, potential risks to the system, and an estimate of the time required for system evaluation. 
+=======
+In the context of software development, functional testing can cover different scopes. When done in an isolated envionment rather than a operational context, it is called "Unit Testing". When tested together with other applications of the system, it is called "Integration Testing". (https://www.researchgate.net/publication/294854003_The_need_for_functional_security_testing)
+
+Functional security testing on the other hand, is focused on ensuring that applications do not act in ways they are not mant to, regardless of the scoping. The key element of this approach is "Negative Testing" which specifically tests for misbehaviour, for example, on corrupted or wrong input. Given the vast amount of attack vectors, this is an extensive and open-ended task.
+
+According to (https://www.researchgate.net/publication/294854003_The_need_for_functional_security_testing), it is this approach that, depending on the amount of money and time invested, can give some level of assurance in terms of the avoidance and resistance to attacks.
+
+
+#### Security Vulnerable testing (Penetration Testing)
+According to (McGraw, G. (2006). Software Security: Building Security In, Adison Wesley Professional.), "Penetration Testing is a comprehensive method to test the complete, integrated, operational, and trusted computing base that consists of hardware, software and people."
+
+It is an analysis of the system for potential vulnerabilities such as hardware and software flaws and faulty system configuration. Even operational weaknesses and employee manipulation, with so called Social Engineering, can be in scope for the test. (Mohanty, D. “Demystifying Penetration Testing HackingSpirits,” http://www.infosecwriters.com/text_resources/pdf/pen_test2.pdf, accessed on Nov. 23, 2011.)
+
+Given the strong fan-out of attack vectors, penetration testing requires highly skilled candidates with a very specific skillset focusing on the to be tested infrastructure and application. (An overview of penetration testing)
+
+Penetration testing is different from functional security testing in a way that FST checks correct behavior of the system’s security controls. Penetration testing, in contrast, determines the difficulty for someone to penetrate an organization’s security controls. (An overview of penetration testing)
+
+In a study conducted by the German Federal Office for Information Security (https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/Studies/Penetration/penetration_pdf.pdf?__blob=publicationFile&v=1) the five phases of Pentration Testing process are defined as follows.
+
+![Penetration testing process schema](...)
+... Draw image of BSI steps as chart with same wording
+
+**Phase 1: Preparation**
+In the first phase, the requirements and objectives, as well as the procedures, of the test have to be defined with the client. The project has to be scoped and should be written down in the contract to avoid any kind of legal infringements.
+
+**Phase 2: Reconnaissance**
+Reconnaissance is strategic obeservation. In the second phase, a complete and detailed overview of the system, including possible attack vectors, is gathered and documented.
+
+**Phase 3: Analyzing information and risks**
+Phase 3 can act as a funnel to further filter down possible targets. The process of Threat and Risk Analysis (TaRAs), as it is called at SEC team at ETAS, includes defined goals for the test, potential risks to the system and an estimate of the time required for system evaluation. 
+>>>>>>> 3d58db44954f3b92d5c6991e4a23bdca0fe10cac
 
 **Phase 4: Active intrusion attempts**
 Given the outline and analysis from previous phases, this phase covers the attack on the defined system to the in the analysis defined extend.
 
+<<<<<<< HEAD
 On systems with high availability or integrity requirements, potential adverse effects have to be considered in advance. For those systems, patches to prevent full system failures might be installed before testing. 
 
 **Phase 5: Final analysis**
@@ -177,6 +210,17 @@ The last phase defines the requirements for report generation. The final report 
 This manual process is time and resource-intensive while parts of it, especially reporting, are highly repetitive and display a high potential of automatability. (https://www.greycampus.com/blog/information-security/penetration-testing-step-by-step-guide-stages-methods-and-application)
 
 As part of the Bosch Security Engineering Process (SEP), penetration testing is a mandatory step in the production lifecycle of a project. As one of the last and final "Gates", it enables a project to progress from development into the production stage.
+=======
+On systems with high availability or integrity requirements, potential negative effects have to be considered in advance. For those systems, patches to prevent full system failures, might be installed before testing. 
+
+**Phase 5: Final analysis**
+The last phase defines the requirements for report generation. The final report should "contain an evaluation of the vulnerabilities located in the form of potential risks and recommendations for eliminating the vulnerabilities and risks". It also has to disclose the done tests and found vulnerabilites. ((https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/Studies/Penetration/penetration_pdf.pdf?__blob=publicationFile&v=1) Seite 46)
+
+
+This manual process is time and resource intensive while parts of it, especially reporting, are highly repetivtive and display a high potential of automatability. (https://www.greycampus.com/blog/information-security/penetration-testing-step-by-step-guide-stages-methods-and-application)
+
+As part of the Bosch Security Engineering Process (SEP), penetration testing is a mandartoy step in the production lifecycle of a project. As one of the last and final "Gates", it enables a project to progress from development into the production stage.
+>>>>>>> 3d58db44954f3b92d5c6991e4a23bdca0fe10cac
 
 
 ### On the need for automated testing
@@ -382,4 +426,8 @@ http://www.xinhuanet.com/english/2018-08/13/c_137387613.htm
 
 ## References
 
+<<<<<<< HEAD
 compliance. (2020). [online] Available at: https://dictionary.cambridge.org/dictionary/english/compliance [Accessed 24 Feb. 2020].
+=======
+compliance. (2020). [online] Available at: https://dictionary.cambridge.org/dictionary/english/compliance [Accessed 24 Feb. 2020].
+>>>>>>> 3d58db44954f3b92d5c6991e4a23bdca0fe10cac

@@ -1,0 +1,56 @@
+{
+	"info": {
+		"_postman_id": "9b9e1fc4-33af-465b-a3e8-1f1bbe5f0516",
+		"name": "Gateway",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Start Test",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"testProperties\": {\n\t\t\"azure_tenant_id\": {{TENANT_ID}},\n\t\t\"azure_subscription_id\": {{SUBSCRIPTION_ID}},\n\t\t\"azure_client_id\": {{CLIENT_ID}},\n\t\t\"azure_client_secret\": {{CLIENT_SECRET}}\n\t},\n\t\"requirements\": [\n\t\t{\n\t\t\t\"name\": \"MSA-\",\n\t\t\t\"policy_id\": {{POLICY_ID}},\n\t\t\t\"policy_json_url\": {{JSON_URL}},\n\t\t\t\"assignment_id\": \"\"\n\t\t}\n\t]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:5001/scanapi/tests",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"scanapi",
+						"tests"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get status of test",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": ""
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

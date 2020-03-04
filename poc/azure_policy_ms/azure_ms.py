@@ -29,33 +29,33 @@ running_evaluations = {}
 policy_eval_definition = api.model(
     "PolicyEvalDefinition",
     {
-        "tenantId": fields.String(
+        "azure_tenant_id": fields.String(
             description="Tenant-id from Azure AD", required=True,
         ),
-        "subscriptionId": fields.String(
+        "azure_subscription_id": fields.String(
             description="Subscription_id of azure subscription", required=True,
         ),
-        "clientId": fields.String(
+        "azure_client_id": fields.String(
             description="Client id from application for service principal",
             required=True,
         ),
-        "clientSecret": fields.String(
+        "azure_client_secret": fields.String(
             description="Client secret from application for service principal",
             required=True,
         ),
-        "resource": fields.String(
+        "azure_resour": fields.String(
             description="Optional url endpoint of azure resource ([default] 'https://management.azure.com/')",
             required=False,
         ),
-        "policyId": fields.String(
+        "policy_id": fields.String(
             description="Unique identifier for policy definition", required=True,
         ),
-        "policyJsonUrl": fields.String(
+        "policy_json_url": fields.String(
             description="URL of the json policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure",
             required=True,
         ),
-        "assignmentId": fields.String(
-            description="Optional unique identifier for policy assignment (policyId will be used if not given)",
+        "assignment_id": fields.String(
+            description="Optional unique identifier for policy assignment (policy_id will be used if not given)",
             required=False,
         ),
     },
@@ -112,6 +112,7 @@ class PolicyResult(Resource):
         if not eval_state:
             return get_error_res(test_id)
 
+        app.logger.info(eval_state)
         return eval_state
 
 
@@ -125,14 +126,14 @@ class PolicyEvaluation(Resource):
         request_params = api.payload
 
         eval_id = str(uuid.uuid4())
-        tenant_id = request_params["tenantId"]
-        subscription_id = request_params["subscriptionId"]
-        client_id = request_params["clientId"]
-        client_secret = request_params["clientSecret"]
-        resource = request_params.get("resource")
-        policy_id = request_params["policyId"]
-        assignment_id = request_params.get("assignmentId", policy_id)
-        policy_json_url = request_params["policyJsonUrl"]
+        tenant_id = request_params["azure_tenant_id"]
+        subscription_id = request_params["azure_subscription_id"]
+        client_id = request_params["azure_client_id"]
+        client_secret = request_params["azure_client_secret"]
+        resource = request_params.get("azure_resour")
+        policy_id = request_params["policy_id"]
+        assignment_id = request_params.get("assignment_id", policy_id)
+        policy_json_url = request_params["policy_json_url"]
         policy_json = {}
 
         output_res = {
