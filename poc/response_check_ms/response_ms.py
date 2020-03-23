@@ -117,7 +117,9 @@ class Evaluation(Resource):
 
         # TODO replace with worker pool with queue to avoid spawning hundreds of threads
         try:
-            app.logger.info(f"Starting response evaluation worker thread for eval_id {eval_id}")
+            app.logger.info(
+                f"Starting response evaluation worker thread for eval_id {eval_id}"
+            )
 
             worker = EvaluationWorker(
                 running_evaluations, eval_id, requirement, app_url,

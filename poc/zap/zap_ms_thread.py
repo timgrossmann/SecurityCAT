@@ -16,11 +16,7 @@ logging.basicConfig(
 
 class EvaluationWorker(Thread):
     def __init__(
-        self,
-        running_evaluations,
-        eval_id,
-        app_url,
-        zap_api_key,
+        self, running_evaluations, eval_id, app_url, zap_api_key,
     ):
         Thread.__init__(self)
 
@@ -36,11 +32,14 @@ class EvaluationWorker(Thread):
 
         self.output_res = {
             "id": self.eval_id,
-            "result": {"message": f"", "status": "IN_PROGRESS", "confidenceLevel": "0",},
+            "result": {
+                "message": f"",
+                "status": "IN_PROGRESS",
+                "confidenceLevel": "0",
+            },
         }
 
         self.session = self.__initiate_zap_session()
-
 
     def run(self):
         # Try to default spider the app
@@ -85,11 +84,13 @@ class EvaluationWorker(Thread):
         # Try to get the report from ZAP and persist it on disk
         try:
             all_attribute_alerts = self.__get_alert_report()
-            alerts = [self.__filter_alert_elements(alert) for alert in all_attribute_alerts]
+            alerts = [
+                self.__filter_alert_elements(alert) for alert in all_attribute_alerts
+            ]
 
             self.output_res["result"] = {
-                "message": alerts, 
-                "status": "PASSED", 
+                "message": alerts,
+                "status": "PASSED",
                 "confidenceLevel": "0",
             }
             self.running_evaluations[self.eval_id] = self.output_res
@@ -103,7 +104,6 @@ class EvaluationWorker(Thread):
             self.running_evaluations[self.eval_id] = self.output_res
             return
 
-
     def __initiate_zap_session(self):
         """Tries to connect to ZAP and check given api_key
         
@@ -116,20 +116,18 @@ class EvaluationWorker(Thread):
 
         return zap
 
-
     def __d_spider_app(self):
         """Uses the given app_url and scans it with the default spider.
         Returns once the scan is complete
         """
 
-        self.logger.info(f'Spidering target {self.app_url}')
+        self.logger.info(f"Spidering target {self.app_url}")
         scanID = self.session.spider.scan(self.app_url)
         while int(self.session.spider.status(scanID)) < 100:
-            self.logger.debug(f'Spider progress: {self.session.spider.status(scanID)}%')
+            self.logger.debug(f"Spider progress: {self.session.spider.status(scanID)}%")
             time.sleep(10)
 
-        self.logger.debug(f'Finished spidering {self.app_url} with default spider')
-
+        self.logger.debug(f"Finished spidering {self.app_url} with default spider")
 
     def __a_spider_app(self, timeout=120):
         """Uses the given app_url and scans it with the default spider.
@@ -139,33 +137,31 @@ class EvaluationWorker(Thread):
         timeout (int): number of seconds until the timeout of the ajax spider        
         """
 
-        self.logger.info(f'Spidering target with ajax Spider - {self.app_url}')
+        self.logger.info(f"Spidering target with ajax Spider - {self.app_url}")
         self.session.ajaxSpider.scan(self.app_url)
 
         timeout_diff = time.time() + timeout
-        while self.session.ajaxSpider.status == 'running':
+        while self.session.ajaxSpider.status == "running":
             if time.time() > timeout_diff:
                 break
 
-            self.logger.debug('Ajax Spider status: ' + self.session.ajaxSpider.status)
+            self.logger.debug("Ajax Spider status: " + self.session.ajaxSpider.status)
             time.sleep(10)
 
-        self.logger.info(f'Finished ajax spidering {self.app_url} with ajax spider')
-
+        self.logger.info(f"Finished ajax spidering {self.app_url} with ajax spider")
 
     def __a_scan_app(self):
         """Uses the given app_url and active scans (attacks) it. 
         Returns once the scan is complete
         """
 
-        self.logger.info(f'Active Scanning target {self.app_url}')
+        self.logger.info(f"Active Scanning target {self.app_url}")
         scanID = self.session.ascan.scan(self.app_url)
         while int(self.session.ascan.status(scanID)) < 100:
-            self.logger.debug(f'Scan progress: {self.session.ascan.status(scanID)}%')
+            self.logger.debug(f"Scan progress: {self.session.ascan.status(scanID)}%")
             time.sleep(10)
 
-        self.logger.info(f'Active Scan completed for {self.app_url}')
-
+        self.logger.info(f"Active Scan completed for {self.app_url}")
 
     def __get_alert_report(self):
         """Gets the alerts for the given app_url from ZAP 
@@ -174,11 +170,10 @@ class EvaluationWorker(Thread):
         dict: JSON containing the triggered alerts of the give app
         """
 
-        self.logger.info(f'Getting alerts for {self.app_url} from ZAP')
+        self.logger.info(f"Getting alerts for {self.app_url} from ZAP")
         alerts = self.session.core.alerts(baseurl=self.app_url)
 
         return alerts
-
 
     def __filter_alert_elements(self, alert):
         """Removes unused fields from the alert response 
@@ -187,7 +182,18 @@ class EvaluationWorker(Thread):
         dict: JSON containing the filtered attributes of an alert
         """
 
-        used_fields = ["other", "method", "evidence", "confidence", "description", "url", "reference", "solution", "alert", "risk"]
+        used_fields = [
+            "other",
+            "method",
+            "evidence",
+            "confidence",
+            "description",
+            "url",
+            "reference",
+            "solution",
+            "alert",
+            "risk",
+        ]
         new_alert = {}
 
         for field in used_fields:
@@ -195,15 +201,16 @@ class EvaluationWorker(Thread):
 
         return new_alert
 
-
     def __persist_alerts(self, alerts):
         """Writes the given alerts, for the given app_url, to the according file
         for later use.
         """
 
-        self.logger.info(f'Writing alerts for {self.app_url} to file')
-        with open(f'./alerts/{self.app_url}', 'w') as alert_file:
-            self.logger.debug(f'Writing alerts for {self.app_url} to ./alerts/{self.app_url}')
+        self.logger.info(f"Writing alerts for {self.app_url} to file")
+        with open(f"./alerts/{self.app_url}", "w") as alert_file:
+            self.logger.debug(
+                f"Writing alerts for {self.app_url} to ./alerts/{self.app_url}"
+            )
             alert_file.write(json.dumps(alerts, indent=4))
 
-        self.logger.info(f'Wrote alerts for {self.app_url} to file')
+        self.logger.info(f"Wrote alerts for {self.app_url} to file")
