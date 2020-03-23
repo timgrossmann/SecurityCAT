@@ -48,8 +48,11 @@ class EvaluationWorker(Thread):
         try:
             # TODO check GET, POST, PUT, DELETE with empty payloads
             response = requests.get(self.app_url, self.request_headers)
+            eval_result = requirement_mapper.evaluate(response, self.requirement)
 
-            requirement_mapper.evaluate(response, self.requirement)
+            self.output_res["result"] = eval_result
+            self.running_evaluations[self.eval_id] = self.output_res
+            return
 
         except Exception as err:
             self.output_res["result"]["status"] = "ERROR"
@@ -57,5 +60,6 @@ class EvaluationWorker(Thread):
                 "message"
             ] = f"Response for app at {self.app_url} could not tested for requirement {self.requirement} - {err}..."
 
+            self.logger.error(f"Response for app at {self.app_url} could not tested for requirement {self.requirement} - {err}...")
             self.running_evaluations[self.eval_id] = self.output_res
             return

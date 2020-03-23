@@ -1,5 +1,4 @@
-# Remove abstraction of requirements and check specific elements
-# TODO add check response code, content-type and encoding set? with the __check_headers_contains_elem method
+# Remove abstraction of requirements and check specific elements, maps each requirement to a method
 __requirement_func_mapping = {
     "ASVS_3.0.1_10.10": lambda headers: __check_headers_contains_elem(
         headers, "Public-Key-Pins"
@@ -11,6 +10,7 @@ __requirement_func_mapping = {
         headers, "Strict-Transport-Security", "preload"
     ),
 }
+# TODO add check response code, content-type and encoding set? with the __check_headers_contains_elem method
 
 
 def __get_eval_result(status, message, confidence):
@@ -82,5 +82,10 @@ def evaluate(http_response, requirement):
     """
 
     # get the according method for the given requirement and pass it the headers of the response
-    eval_result = __requirement_func_mapping[requirement](http_response.headers)
-    return eval_result
+    req_check_func = __requirement_func_mapping.get(requirement, None)
+
+    # check if there is a mapping to a method for the given requirement
+    if callable(req_check_func):
+        return req_check_func(http_response.headers)
+
+    raise KeyError(f"No mapping for requirement {requirement}")
