@@ -84,7 +84,8 @@ class EvaluationWorker(Thread):
 
         # Try to get the report from ZAP and persist it on disk
         try:
-            alerts = self.__get_alert_report()
+            all_attribute_alerts = self.__get_alert_report()
+            alerts = [self.__filter_alert_elements(alert) for alert in all_attribute_alerts]
 
             self.output_res["result"] = {
                 "message": alerts, 
@@ -177,6 +178,22 @@ class EvaluationWorker(Thread):
         alerts = self.session.core.alerts(baseurl=self.app_url)
 
         return alerts
+
+
+    def __filter_alert_elements(self, alert):
+        """Removes unused fields from the alert response 
+
+        Returns:
+        dict: JSON containing the filtered attributes of an alert
+        """
+
+        used_fields = ["other", "method", "evidence", "confidence", "description", "url", "reference", "solution", "alert", "risk"]
+        new_alert = {}
+
+        for field in used_fields:
+            new_alert[field] = alert[field]
+
+        return new_alert
 
 
     def __persist_alerts(self, alerts):
