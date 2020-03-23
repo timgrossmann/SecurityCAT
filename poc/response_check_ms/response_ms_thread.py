@@ -3,7 +3,7 @@ import json
 from threading import Thread, get_ident
 import time
 
-from requests import exceptions
+import requests
 
 # setup logging to console and log file
 logging.basicConfig(
@@ -31,6 +31,10 @@ class EvaluationWorker(Thread):
         self.requirement = requirement
         self.app_url = app_url
 
+        self.request_headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0'
+        }
+
         self.output_res = {
             "id": self.eval_id,
             "result": {"message": f"", "status": "IN_PROGRESS", "confidenceLevel": "0",},
@@ -38,9 +42,11 @@ class EvaluationWorker(Thread):
 
 
     def run(self):
-        # Try to request the app_url
+        # Try to request the app_url and check against requirement
         try:
-            self.__d_spider_app()
+            response = requests.get(self.app_url, self.request_headers)
+
+            
 
         except Exception as err:
             self.output_res["result"]["status"] = "ERROR"

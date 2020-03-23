@@ -7,7 +7,7 @@ import requests
 from flask import Flask, request, jsonify
 from flask_restplus import Resource, Api, fields, reqparse
 
-from custom_ms_thread import EvaluationWorker
+from response_ms_thread import EvaluationWorker
 
 
 # setup logging to console and log file
@@ -24,12 +24,13 @@ api = Api(app)
 # TODO replace with db
 running_evaluations = {}
 
-# Parameters given for a start of a custom evaluation
-cutom_eval_definition = api.model(
-    "CustomEvalDefinition",
+# Parameters given for a start of a response evaluation
+response_eval_definition = api.model(
+    "ResponseEvalDefinition",
     {
+        # TODO adjust definition to dict and not only string containing short name
         "requirement": fields.String(
-            description="Url of the to be tested application", required=True,
+            description="To be tested requirement", required=True,
         ),
         "appUrl": fields.String(
             description="Url of the to be tested application", required=True,
@@ -37,14 +38,14 @@ cutom_eval_definition = api.model(
     },
 )
 
-# Custom evaluation result structure expected by SecurityRAT
-cutom_eval_result = api.model(
-    "CustomEvalResultStructure",
+# Response evaluation result structure expected by SecurityRAT
+response_eval_result = api.model(
+    "ResponseEvalResultStructure",
     {
         "id": fields.String(description="Unique id of the "),
         "result": fields.Nested(
             api.model(
-                "CustomEvalResult",
+                "ResponseEvalResult",
                 {
                     "status": fields.String(
                         description="Requirement fulfilled? (PASSED/FAILED/ERROR/IN_PROGRESS)"
@@ -59,13 +60,13 @@ cutom_eval_result = api.model(
 
 
 def get_error_res(eval_id):
-    """Creates a default error response based on the custom_evaluation_result structure
+    """Creates a default error response based on the response_evaluation_result structure
     
     Parameters:
     eval_id (String): Unique identifier for evaluation
     
     Returns:
-    CustomEvalResultStructure object: with the error state with the given id
+    ResponseEvalResultStructure object: with the error state with the given id
     """
     return {
         "id": eval_id,
@@ -77,11 +78,11 @@ def get_error_res(eval_id):
     }
 
 
-### Custom evaluation status check
+### Response evaluation status check
 @api.route("/api/tests/<test_id>", methods=["GET"])
 class EvaluationResult(Resource):
     @api.doc(responses={200: "Test result"})
-    @api.marshal_list_with(cutom_eval_result)
+    @api.marshal_list_with(response_eval_result)
     def get(self, test_id):
         eval_state = running_evaluations.get(test_id)
 
@@ -91,12 +92,12 @@ class EvaluationResult(Resource):
         return eval_state
 
 
-### Custom evaluation class
+### Response evaluation class
 @api.route("/api/tests", methods=["POST"])
 class Evaluation(Resource):
     @api.doc(responses={200: "Test result"})
-    @api.expect(cutom_eval_definition)
-    @api.marshal_list_with(cutom_eval_result)
+    @api.expect(response_eval_definition)
+    @api.marshal_list_with(response_eval_result)
     def post(self):
         request_params = api.payload
 
@@ -116,7 +117,7 @@ class Evaluation(Resource):
 
         # TODO replace with worker pool with queue to avoid spawning hundreds of threads
         try:
-            app.logger.info(f"Starting custom evaluation worker thread for eval_id {eval_id}")
+            app.logger.info(f"Starting response evaluation worker thread for eval_id {eval_id}")
 
             worker = EvaluationWorker(
                 running_evaluations, eval_id, requirement, app_url,
@@ -126,13 +127,13 @@ class Evaluation(Resource):
             worker.start()
         except Exception as err:
             app.logger.info(
-                f"Could not create custom evalution worker thread for eval_id {eval_id}... {err}"
+                f"Could not create response evalution worker thread for eval_id {eval_id}... {err}"
             )
 
             output_res["result"]["status"] = "ERROR"
             output_res["result"][
                 "message"
-            ] = f"Could not create custom evalution worker thread for eval_id {eval_id}... {err}"
+            ] = f"Could not create response evalution worker thread for eval_id {eval_id}... {err}"
 
             running_evaluations[eval_id] = output_res
 
