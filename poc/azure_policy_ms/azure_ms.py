@@ -43,20 +43,13 @@ policy_eval_definition = api.model(
             description="Client secret from application for service principal",
             required=True,
         ),
-        "azure_resour": fields.String(
+        "azure_resource": fields.String(
             description="Optional url endpoint of azure resource ([default] 'https://management.azure.com/')",
             required=False,
-        ),
-        "policy_id": fields.String(
-            description="Unique identifier for policy definition", required=True,
         ),
         "policy_json_url": fields.String(
             description="URL of the json policy definition in the format of https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure",
             required=True,
-        ),
-        "assignment_id": fields.String(
-            description="Optional unique identifier for policy assignment (policy_id will be used if not given)",
-            required=False,
         ),
     },
 )
@@ -104,8 +97,7 @@ def get_error_res(eval_id):
 ### Policy evaluation status check
 @api.route("/api/tests/<test_id>", methods=["GET"])
 class PolicyResult(Resource):
-    @api.doc(responses={200: "Test result"})
-    @api.marshal_list_with(policy_eval_result)
+    @api.response(200, "Test result", policy_eval_result)
     def get(self, test_id):
         eval_state = running_evaluations.get(test_id)
 
@@ -119,9 +111,8 @@ class PolicyResult(Resource):
 ### Policy evaluation class
 @api.route("/api/tests", methods=["POST"])
 class PolicyEvaluation(Resource):
-    @api.doc(responses={200: "Test result"})
     @api.expect(policy_eval_definition)
-    @api.marshal_list_with(policy_eval_result)
+    @api.response(201, "Evaluation created", policy_eval_result)
     def post(self):
         request_params = api.payload
 
@@ -130,9 +121,7 @@ class PolicyEvaluation(Resource):
         subscription_id = request_params["azure_subscription_id"]
         client_id = request_params["azure_client_id"]
         client_secret = request_params["azure_client_secret"]
-        resource = request_params.get("azure_resour")
-        policy_id = request_params["policy_id"]
-        assignment_id = request_params.get("assignment_id", policy_id)
+        resource = request_params.get("azure_resource")
         policy_json_url = request_params["policy_json_url"]
         policy_json = {}
 
@@ -143,6 +132,10 @@ class PolicyEvaluation(Resource):
 
         try:
             policy_json = get_from_bitbucket(policy_json_url)
+            
+            # replace the value of properties.policyType to Custom since BuiltIn types can't be defined
+            policy_json["properties"]["policyType"] = "Custom"
+            
             app.logger.debug(f"Retrieved JSON from Socialcoding: {policy_json}")
         except Exception as err:
             app.logger.error(f"Error retrieving policy json - {err}")
@@ -150,6 +143,11 @@ class PolicyEvaluation(Resource):
             output_res["result"]["status"] = "ERROR"
 
             return output_res
+        
+        # if the policy json already has a name, use it, otherwise create a new uuid as id
+        policy_json_id = policy_json.get("name", None)
+        policy_id = policy_json_id if policy_json_id is not None else str(uuid.uuid4())
+        assignment_id = policy_id
 
         output_res["result"]["status"] = "IN_PROGRESS"
         running_evaluations[eval_id] = output_res
@@ -188,3 +186,15 @@ class PolicyEvaluation(Resource):
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
+
+
+"""
+{
+  "azure_tenant_id": "0ae51e19-07c8-4e4b-bb6d-648ee58410f4",
+  "azure_subscription_id": "1b39434c-3b27-4528-b563-99e6d09aa099",
+  "azure_client_id": "8a90058a-db63-4f9f-bfb3-3e4450efe046",
+  "azure_client_secret": "_:JfB4sW_lTD08a.C7psfI/tlmQ64@t3",
+  "policy_json_url": "https://sourcecode.socialcoding.bosch.com/projects/AZURE/repos/azure.bios.repo.template/browse/EISA/Compute/EISA-CPL-202/EISA_CPL_202_MonitorVMVulnerabilities.json"
+}
+"""
