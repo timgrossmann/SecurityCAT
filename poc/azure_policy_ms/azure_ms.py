@@ -186,15 +186,3 @@ class PolicyEvaluation(Resource):
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
-
-
-
-"""
-{
-  "azure_tenant_id": "0ae51e19-07c8-4e4b-bb6d-648ee58410f4",
-  "azure_subscription_id": "1b39434c-3b27-4528-b563-99e6d09aa099",
-  "azure_client_id": "8a90058a-db63-4f9f-bfb3-3e4450efe046",
-  "azure_client_secret": "_:JfB4sW_lTD08a.C7psfI/tlmQ64@t3",
-  "policy_json_url": "https://sourcecode.socialcoding.bosch.com/projects/AZURE/repos/azure.bios.repo.template/browse/EISA/Compute/EISA-CPL-202/EISA_CPL_202_MonitorVMVulnerabilities.json"
-}
-"""
