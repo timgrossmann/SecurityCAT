@@ -1,6 +1,5 @@
 import logging
 import re
-from time import sleep
 
 import requests
 from adal import AuthenticationContext
@@ -135,7 +134,7 @@ class AzureInteractor:
         return result
 
     def __post_url(self, url):
-        """Get calls the given url
+        """Post calls the given url
         
         Parameters:
         url (String): url to do the get call to
@@ -145,6 +144,19 @@ class AzureInteractor:
         """
 
         result = self.session.post(url)
+        return result
+    
+    def __delete_url(self, url):
+        """Delete calls the given url
+        
+        Parameters:
+        url (String): url to do the get call to
+        
+        Returns:
+        requests Response object: instance of Response of the delete operation
+        """
+        
+        result = self.session.delete(url)
         return result
 
     def get_policy_definition(self, policy_id):
@@ -172,7 +184,7 @@ class AzureInteractor:
         Returns:
         requests Response object: instance of Response of the put operation
         """
-
+            
         policy_def_endpoint = self.__get_policy_def_endpoint(policy_id)
         result = self.session.put(policy_def_endpoint, json=definition_json)
 
@@ -235,6 +247,7 @@ class AzureInteractor:
 
         data = {}
 
+        # TODO find solution to fix filtering
         if assignment_id:
             data = {
                 "$filter": "PolicyAssignmentId eq '/subscriptions/{self.subscription_id}/providers/Microsoft.Authorization/policyAssignments/{assignment_id}/'"
@@ -279,3 +292,29 @@ class AzureInteractor:
 
         evaluation_summary_url = self.__get_policy_summary_endpoint(assignment_id)
         return self.__post_url(evaluation_summary_url)
+
+    def delete_policy_definition(self, policy_id):
+        """Delete the policy defintion of the given policy
+        
+        Parameters:
+        policy_id (String): unique identifier for policy definition
+        
+        Returns:
+        requests Response object: instance of Response of the policy definition deletion
+        """
+        
+        delete_definition_url = self.__get_policy_def_endpoint(policy_id)
+        return self.__delete_url(delete_definition_url)
+    
+    def delete_policy_assignment(self, assignment_id):
+        """Delete the policy assignment of the assignment_id
+        
+        Parameters:
+        assignment_id (String): unique identifier for policy assignment
+        
+        Returns:
+        requests Response object: instance of Response of the policy definition deletion
+        """
+        
+        delete_assignment_url = self.__get_policy_assign_endpoint(assignment_id)
+        return self.__delete_url(delete_assignment_url)
