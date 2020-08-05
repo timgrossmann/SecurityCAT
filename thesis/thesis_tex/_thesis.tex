@@ -1,0 +1,113 @@
+% Change to 'masters' to produces the masters thesis preliminary pages
+\documentclass[oneside,phd,etd]{UoBclass}
+
+\usepackage{import}
+
+% preamble contains title page, signature page, acknowledgement and abstract texts
+\usepackage{_preamble}
+
+% Packages used
+\usepackage[utf8]{inputenc} % Remove warning on ascii conversion
+\usepackage[T1]{fontenc} % Remove warning on ascii conversion
+\usepackage[refsection=part,citestyle=apa,style=authoryear,natbib=true,backend=biber]{biblatex}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{acronym}
+
+% Make chapter numbers into string words 1 -> ONE
+\usepackage{fmtcount}
+\makeatletter
+\renewcommand*{\lstlistlistingname}{List of Code Snippets}
+\renewcommand{\@makechapterhead}[1]{\vspace *{40\p@ }{\parindent \z@ 
+\raggedright \normalfont \ifnum \c@secnumdepth >\m@ne \Huge \bfseries 
+\@chapapp \space \Numberstring{chapter} \vskip 10\p@ \fi #1\par \nobreak \vskip 30\p@ }}
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\leftmark}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\cfoot{\thepage}
+
+\addbibresource{_bib.bib}
+
+\begin{document}
+
+\hypersetup{breaklinks=true}
+
+ % Start page counting in roman numerals
+ \frontmatter
+
+ % This command makes the formal preliminary pages.
+ % You can comment it out during the drafting process if you want to save paper.
+ \makepreliminarypages
+
+ \doublespace
+ % Make the table of contents.
+ \tableofcontents
+ \thispagestyle{plain}
+ 
+  % Make the list of figures
+ \mylistoffigures
+ \thispagestyle{plain}
+
+ % Make the list of tables
+ \mylistoftables
+ \thispagestyle{plain}
+ 
+ % Make the list of listings
+ \lstlistoflistings
+ \thispagestyle{plain}
+ 
+ % This page is OPTIONAL. To remove, comment out and \dedicationpage in _thesis.tex
+ %\dedicationpage
+ \clearemptydoublepage
+ 
+ \chapter*{List of Acronyms}
+ \begin{acronym}[]
+     \acro{AWS}{Amazon Web Services}
+     \acro{ASVS}{Application Security Verification Standard}
+     \acro{CI}{Continuous Integration}
+     \acro{CD}{Continuous Development}
+     \acro{C5}{Cloud Computing Compliance Controls Catalogue}
+     \acro{DSL}{Domain Specific Language}
+     \acro{DVWA}{Damn vulnerable web app}
+     \acro{FST}{Functional Security Testing}
+     \acro{MBST}{Model-based security testing}
+     \acro{MBVT}{Model-based vulnerability testing}
+     \acro{OWASP}{Open Web Application Security Project}
+     \acro{PoC}{Proof of Concept}
+     \acro{RAII}{Resource allocation is initialization}
+     \acro{SecurityRAT}{Security Requirements Automation Tool}
+     \acro{SecurityCAT}{Security Compliance Automation Tool}
+     \acro{SEP}{Security Engineering Process}
+     \acro{SLA}{Service Level Agreement}
+     \acro{SUT}{System under Test}
+     \acro{TaRA}{Threat and Risk Analysis}
+     \acro{ZAP}{ZED Attack Proxy}
+\end{acronym}
+\thispagestyle{plain}
+
+ % Start regular page counting at page 1
+ \mainmatter
+
+% OK. Everything is set up. Type your thesis here.
+\include{chapter1/ch1}
+\include{chapter2/ch2}
+\include{chapter4/ch4}
+\include{chapter5/ch5}
+\include{chapter6/ch6}
+\include{chapter7/ch7}
+
+% Appendices
+\include{_appendix}
+
+% Bibliography
+\begingroup
+    \setlength\bibitemsep{10pt}
+    \linespread{1}\selectfont
+    \printbibliography[title=References]
+\endgroup
+\addcontentsline{toc}{part}{References}
+
+\end{document}

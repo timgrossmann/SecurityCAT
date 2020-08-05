@@ -1,0 +1,19 @@
+\appendix
+
+%%%%%%%%%% DON'T DELETE THIS, REVERTS NUMBERING BACK %%%%%%%%%%%%%
+\makeatletter
+\renewcommand{\@makechapterhead}[1]{\vspace *{-10\p@ }{\parindent \z@ 
+\raggedright \normalfont \ifnum \c@secnumdepth >\m@ne \Huge \bfseries 
+\@chapapp \space \thechapter \vskip 10\p@ \fi #1\par \nobreak \vskip 30\p@ }}
+\makeatother
+%%%%%%%%%% DON'T DELETE THIS, REVERTS NUMBERING BACK %%%%%%%%%%%%%
+
+\chapter{Azure Microservice Sequence Chart}
+\label{azure_ms_sequence_chart}
+\vspace*{-0.3in}
+\begin{figure}[hb!]
+\begin{center}
+\makebox[\textwidth][c]{\includegraphics[height=16cm]{Azure_MS_Sequence.png}}
+\end{center}
+\caption[Sequence chart of Azure MS Policy creation flow]{Sequence chart of Azure MS Policy creation flow}
+\end{figure}

@@ -1,0 +1,6 @@
+requests
+adal
+celery
+flask
+flask_restplus
+certifi

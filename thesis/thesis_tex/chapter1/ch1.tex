@@ -1,0 +1,30 @@
+\addchapheadtotoc
+\chapter{Introduction}
+This chapter gives a brief introduction on the topic of automated security testing and aimed at goal for the proof of concept implementation of the Security Compliance Automation Tool. Additionally, it describes the structure of this thesis to provide the reader with a guide.
+
+\section{Introduction}
+News about data breaches and leaks is ubiquitous. Even though many of the exploited vulnerabilities are known security issues, most products and services do not see the threat. The high cost of security experts further supports this problem. Many companies are not able to focus their financial assets on security-related topics.
+Pipelines for source code analysis and functional test automation are part of all major software companies. However, automated security and system compliance tests are not. For many corporate environments, software projects have to comply with a set of defined requirements before releasing them to production. Those requirements are tested manually by a security expert.
+
+This thesis proposes a tool that enriches available tooling for requirement management, like SecurityRAT, with a set of automation services. The Security Compliance Automation Tool (SecurityCAT) provides interfaces for simple extendability and consists of reusable components. Evaluation for requirements of different standards like ASVS \citep{asvs4.0} or C5 \citep{bsiC5} can be delegated after configuration.
+
+
+\section{Task and Goal of this Thesis}
+This thesis serves as a baseline test for the feasibility of adding a Compliance Automation Tool (CAT) to the cloud security evaluation process at a company. Based on requirements defined at the company, a proof of concept system has been implemented, which provides capabilities to test infrastructure level, as well as application-level requirements in an automated manner.
+
+The single central source of truth is a tool called SecurityRAT. It defines projects - called artifacts - for different use cases like the onboarding of an Azure project. Requirements suitable for Azure are then automatically selected from the company internal catalog of requirements. Tests for specific requirements can then be triggered by this tool. The according results are added to the tested requirements upon evaluation completion. 
+
+A final evaluation will enable the teams - that use SecurityRAT - to assess if using SecurityCAT will improve and optimize their pipeline. In addition to that, the open-source CAT provides a fully documented architecture and an interface definition for customizations and extendability.
+
+
+\section{Structure of the Thesis}
+This thesis is written in a way that separates the theoretical basics from the practical implementation of the Compliance Automation Tool (CAT). By doing this, readers can skip over the fundamentals if they are already aware of testing approaches and security automation essentials. 
+
+The first Chapter, "Fundamentals", introduces basic concepts and keywords, as well as current standard approaches to security testing, both manual and automated. It describes the relation between traditional software testing and security testing and references related work.
+
+After listing different approaches, Chapter 3 evaluates the suitability of those approaches for the scope of the task. 
+Chapter 4 introduces the current testing approach and explains what SecurityRAT is and how it is used.
+
+The actual implementation of the proof of concept is covered in Chapter 5. It displays the thoughts behind the architecture, implementation details, and provides an outlook for the extendability of the taken approach.
+
+The final Chapters summarize the usability and workability of the Proof of Concept (PoC) and evaluate whether it is useful in the provided context.

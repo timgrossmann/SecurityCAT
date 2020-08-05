@@ -1,0 +1,18 @@
+\chapter{Summary and Conclusion}
+This thesis tries to provide an approach to automate parts of the security and compliance check process for software systems.
+The proof of concept implementation of the security compliance automation tool (SecurityCAT) aims to simplify this process by providing a decoupled set of microservices capable of automatically evaluating the compliance state of requirements.
+
+The requirement management tool of choice, SecurityRAT, enables the use of SecurityCAT through an exposed API. The integrated polling mechanism defines the architecture described in \ref{architecture}. As a single source of truth, only results pulled into SecurityRAT define requirements as evaluated.
+
+In theory, automating compliance checks is an important and even essential idea. However, as described in \ref{evaluation}, it comes with many drawbacks and uncertainties since the complexity of the task requires more sophisticated approaches. When leveraging the capabilities of cloud providers like Microsoft Azure or AWS, handling the complexity is delegated to their services.
+The promising results of the Azure microservice elevate from the above-given statement.
+
+For less complex tasks like checking the provided headers of an HTTP response, simple scripting can be used to get passable results. This manual scripting and configuration for the given requirement set, however, still requires a domain expert in the loop. In larger corporations, security experts could create a central database of requirement to evaluation functions, which would shift the need for expertise to one central entity.
+
+The nearly infinite attack space of an application is what makes automated security vulnerability testing difficult. As described in \ref{drawbackAutomated}, merely launching a suite of attacks against an application seldomly leads to high confidence findings.
+In addition to the uncertainty, the high run-time of scans might lead to problems with simultaneous evaluations running.
+
+Each microservice comes with a suite of drawbacks that have to be evaluated in more detail. The Azure and Response Check microservices serve as a solid start for further investigation. The ZAP microservice, in contrast, might require a different approach to be more useful in the given environment.
+
+In conclusion, the need for automated security testing will support the further development of automation tooling. SecurityCAT is only one of many approaches, discussed in this thesis and referenced in \ref{relatedWork}.
+Further testing and improvements on the tool will show if it can be safely integrated into the current testing workflow and provide benefits to the users of security management tools like SecurityRAT.

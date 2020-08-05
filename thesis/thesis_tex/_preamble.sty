@@ -1,0 +1,127 @@
+% Modify this file to complete your dissertation
+\ProvidesPackage{_preamble}
+
+\usepackage{amsmath}
+\usepackage{ifpdf}
+\usepackage{listings}
+
+\ifpdf
+  \usepackage[pdftex]{graphicx}
+\else
+  \usepackage[dvips]{graphicx}
+\fi
+
+\usepackage{afterpage}
+\usepackage{rotating}
+%\usepackage{subfigure}
+% Change the CLASS FILE from UoBclass to bookbinding (and edit class file names accordingly) after your thesis is turned in electronically so you can get your dissertation bound and don't forget to change the above from oneside to twoside!!!!!!!!!!!!!!
+\usepackage{fancyhdr}
+  \fancyfoot[C,CO]{\textbf{\thepage}}
+  \pagestyle{plain}
+  \renewcommand{\chaptermark}[1]{\markboth{\chaptername \ \thechapter \ \ #1}{}}
+  \renewcommand{\sectionmark}[1]{\markright{\thesection \ \ #1}}
+
+% The caption package allows us to change the formatting of figure captions.
+% The commands here change to the suggested caption format: single spaced and a bold tag
+\usepackage[margin=0.3in,labelfont=bf,labelsep=none]{caption}
+ \DeclareCaptionFormat{suggested}{\singlespace#1#2 #3\par\doublespace}
+ \captionsetup{format=suggested}
+
+% The cite package cleans up the way citations are handled.  For example, it
+% changes the citation [1,2,3,6,7,8,9,10,11] into [1-3,6-11].  If your advisor
+% wants superscript citations, use the overcite package instead of the cite package.
+%\usepackage{cite}
+
+% The makeidx package makes your index for you.  To make an index entry,
+% go to the place in the book that should be referenced and type
+%  \index{key}
+% An index entry labeled "key" (or whatever you type) will then
+% be included and point to the correct page.
+\usepackage{makeidx}
+
+
+\makeindex
+
+% The url package allows for the nice typesetting of URLs.  Since URLs are often
+% long with no spaces, they mess up line wrapping.  The command \url{http://www.physics.byu.edu}
+% allows LaTeX to break the url across lines at appropriate places: e.g. http://www.physics.byu.edu
+\usepackage{url}
+\urlstyle{rm}
+
+% The hyperref package provides automatic linking and bookmarking for the table
+% of contents, index, equation references, and figure references.
+%
+% To include a link in your pdf use \href{URL}{Text to be displayed}.  If your
+% display text is the URL, you probably should use the \url{} command discussed
+% above.
+%
+% To add a bookmark in the pdf you can use \pdfbookmark.  You can look up its usage
+% in the hyperref package documentation
+\usepackage[bookmarksnumbered,pdfpagelabels=true,plainpages=false,colorlinks=true,
+            linkcolor=black,citecolor=black,urlcolor=blue]{hyperref}
+
+%   \makepreliminarypages : Makes the preliminary pages
+%   \clearemptydoublepage : same as \cleardoublepage but doesn't put page numbers
+%                           on blank intervening pages
+%   \singlespace          : switch to single spaced lines
+%   \doublespace          : switch to double spaced lines
+\newcommand{\bibs}{DissertationRefs}
+\newcommand{\comments}[1]{}
+
+% ==================================================== %
+%                                                      %
+%   Fill in these fields for the preliminary pages     %
+%                                                      %
+% ==================================================== %
+
+% This is the year and month that you submit the thesis
+  \Year{2020}
+  \Month{April}
+  \Author{Tim Grossmann}
+  \University{Stuttgart Media University}
+  \Department{Faculty of Printing and Media}
+  \DegreeShort{B.Sc.}
+
+% If you have a long title, split it between two lines. The \TitleBottom field defines the second line
+% A two line title should be an "inverted pyramid" with the top line longer than the bottom.
+  \TitleTop{Automated Security and Policy Testing}
+  \TitleMiddle{for cloud applications}
+  \TitleBottom{using a requirements automation tool}
+
+% Your research advisor
+  \Advisor{René Reuter}
+
+% The representative of the department who will approve your thesis (usually the chair) 
+  \DepRep{}
+  \DepRepTitle{}
+
+% Acknowledge those who helped and supported you
+  \Acknowledgments{
+        I wish to express my deepest gratitude to my supervisors, Prof. Walter Kriha and Ren\'e Reuter. Prof. Kriha always helped me question my decisions and push the boundaries throughout my bachelor studies.
+        
+        \vskip 1cm
+        
+        My family, who supported me during all my studies, deserves my most profound appreciation.
+}
+
+
+% The text of your abstract
+% Known bugs
+%   Having a tiny bit of the abstract spill to second page defeats page number removal.
+%   Workaround: make the abstract a little longer or a little shorter.
+%
+  \Abstract{
+  This thesis proposes an approach to automate parts of the security and compliance check process for software systems. The proof of concept implementation of the Security Compliance Automation Tool (SecurityCAT) aims to simplify this process by providing a decoupled set of microservices capable of automatically evaluating the compliance state of centrally managed requirements.
+  
+  The root element of the testing system is OWASP's Security Requirement Automation Tool (SecurityRAT), which serves as a single point of truth for the mentioned compliance of the managed requirements. This interface triggers all interaction with the automation system.
+  
+  Three microservices for security and compliance testing have been implemented to test both, the infrastructure level, using Azure Policies, and the application level, using the ZAP Proxy and a custom response checking script. Each is focusing on another aspect of security testing.
+  
+  Given the nearly infinite attack space of an application, drawbacks surface upon testing of the proposed microservices. A skin-deep analysis gives insights into which implementation shows potential for further investigation.
+  
+}
+
+
+% The members of your graduate committee
+  \MemberA{Walter Kriha}
+  \MemberATitle{Prof.}
