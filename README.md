@@ -5,6 +5,8 @@ It also contains the testing and measuring scripts that have been used for runti
 
 The thesis folder leads to the full and final thesis written about this topic to finalize my "Bachelor of Science" degree.
 
+[Full Thesis on ResearchGate](https://www.researchgate.net/publication/343446911_Automated_Security_and_Policy_Testing_for_Cloud_Applications_using_a_Requirements_Automation_Tool)
+
 ## Gateway
 
 ### Prerequisities
